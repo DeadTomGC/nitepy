@@ -2,70 +2,70 @@ import ctypes
 lib=ctypes.CDLL('nitepy')
 
 track = lib.Tracker_new()
-lib.getUserSkeletonHeadX.restype = float
-lib.getUserSkeletonHeadY.restype = float
-lib.getUserSkeletonHeadZ.restype = float
+lib.getUserSkeletonHeadX.restype = ctypes.c_float
+lib.getUserSkeletonHeadY.restype = ctypes.c_float
+lib.getUserSkeletonHeadZ.restype = ctypes.c_float
 
-lib.getUserSkeletonNeckX.restype = float
-lib.getUserSkeletonNeckY.restype = float
-lib.getUserSkeletonNeckZ.restype = float
+lib.getUserSkeletonNeckX.restype = ctypes.c_float
+lib.getUserSkeletonNeckY.restype = ctypes.c_float
+lib.getUserSkeletonNeckZ.restype = ctypes.c_float
 
-lib.getUserSkeletonL_ShX.restype = float
-lib.getUserSkeletonL_ShY.restype = float
-lib.getUserSkeletonL_ShZ.restype = float
+lib.getUserSkeletonL_ShX.restype = ctypes.c_float
+lib.getUserSkeletonL_ShY.restype = ctypes.c_float
+lib.getUserSkeletonL_ShZ.restype = ctypes.c_float
 
-lib.getUserSkeletonR_ShX.restype = float
-lib.getUserSkeletonR_ShY.restype = float
-lib.getUserSkeletonR_ShZ.restype = float
+lib.getUserSkeletonR_ShX.restype = ctypes.c_float
+lib.getUserSkeletonR_ShY.restype = ctypes.c_float
+lib.getUserSkeletonR_ShZ.restype = ctypes.c_float
 
-lib.getUserSkeletonL_ElbowX.restype = float
-lib.getUserSkeletonL_ElbowY.restype = float
-lib.getUserSkeletonL_ElbowZ.restype = float
+lib.getUserSkeletonL_ElbowX.restype = ctypes.c_float
+lib.getUserSkeletonL_ElbowY.restype = ctypes.c_float
+lib.getUserSkeletonL_ElbowZ.restype = ctypes.c_float
 
-lib.getUserSkeletonR_ElbowX.restype = float
-lib.getUserSkeletonR_ElbowY.restype = float
-lib.getUserSkeletonR_ElbowZ.restype = float
+lib.getUserSkeletonR_ElbowX.restype = ctypes.c_float
+lib.getUserSkeletonR_ElbowY.restype = ctypes.c_float
+lib.getUserSkeletonR_ElbowZ.restype = ctypes.c_float
 
-lib.getUserSkeletonL_HandX.restype = float
-lib.getUserSkeletonL_HandY.restype = float
-lib.getUserSkeletonL_HandZ.restype = float
+lib.getUserSkeletonL_HandX.restype = ctypes.c_float
+lib.getUserSkeletonL_HandY.restype = ctypes.c_float
+lib.getUserSkeletonL_HandZ.restype = ctypes.c_float
 
-lib.getUserSkeletonR_HandX.restype = float
-lib.getUserSkeletonR_HandY.restype = float
-lib.getUserSkeletonR_HandZ.restype = float
+lib.getUserSkeletonR_HandX.restype = ctypes.c_float
+lib.getUserSkeletonR_HandY.restype = ctypes.c_float
+lib.getUserSkeletonR_HandZ.restype = ctypes.c_float
 
-lib.getUserSkeletonTorsoX.restype = float
-lib.getUserSkeletonTorsoY.restype = float
-lib.getUserSkeletonTorsoZ.restype = float
+lib.getUserSkeletonTorsoX.restype = ctypes.c_float
+lib.getUserSkeletonTorsoY.restype = ctypes.c_float
+lib.getUserSkeletonTorsoZ.restype = ctypes.c_float
 
-lib.getUserSkeletonL_HipX.restype = float
-lib.getUserSkeletonL_HipY.restype = float
-lib.getUserSkeletonL_HipZ.restype = float
+lib.getUserSkeletonL_HipX.restype = ctypes.c_float
+lib.getUserSkeletonL_HipY.restype = ctypes.c_float
+lib.getUserSkeletonL_HipZ.restype = ctypes.c_float
 
-lib.getUserSkeletonR_HipX.restype = float
-lib.getUserSkeletonR_HipY.restype = float
-lib.getUserSkeletonR_HipZ.restype = float
+lib.getUserSkeletonR_HipX.restype = ctypes.c_float
+lib.getUserSkeletonR_HipY.restype = ctypes.c_float
+lib.getUserSkeletonR_HipZ.restype = ctypes.c_float
 
-lib.getUserSkeletonL_KneeX.restype = float
-lib.getUserSkeletonL_KneeY.restype = float
-lib.getUserSkeletonL_KneeZ.restype = float
+lib.getUserSkeletonL_KneeX.restype = ctypes.c_float
+lib.getUserSkeletonL_KneeY.restype = ctypes.c_float
+lib.getUserSkeletonL_KneeZ.restype = ctypes.c_float
 
-lib.getUserSkeletonR_KneeX.restype = float
-lib.getUserSkeletonR_KneeY.restype = float
-lib.getUserSkeletonR_KneeZ.restype = float
+lib.getUserSkeletonR_KneeX.restype = ctypes.c_float
+lib.getUserSkeletonR_KneeY.restype = ctypes.c_float
+lib.getUserSkeletonR_KneeZ.restype = ctypes.c_float
 
-lib.getUserSkeletonL_FootX.restype = float
-lib.getUserSkeletonL_FootY.restype = float
-lib.getUserSkeletonL_FootZ.restype = float
+lib.getUserSkeletonL_FootX.restype = ctypes.c_float
+lib.getUserSkeletonL_FootY.restype = ctypes.c_float
+lib.getUserSkeletonL_FootZ.restype = ctypes.c_float
 
-lib.getUserSkeletonR_FootX.restype = float
-lib.getUserSkeletonR_FootY.restype = float
-lib.getUserSkeletonR_FootZ.restype = float
+lib.getUserSkeletonR_FootX.restype = ctypes.c_float
+lib.getUserSkeletonR_FootY.restype = ctypes.c_float
+lib.getUserSkeletonR_FootZ.restype = ctypes.c_float
 
 while(True):
     lib.loop(track)
     if lib.getUsersCount(track) > 0:
-        headX = lib.getUserSkeletonHeadX(track, 0)
-        headY = lib.getUserSkeletonHeadY(track, 0)
-        headZ = lib.getUserSkeletonHeadZ(track, 0)
+        headX = lib.getUserSkeletonR_FootX(track, 0)
+        headY = lib.getUserSkeletonR_FootY(track, 0)
+        headZ = lib.getUserSkeletonR_FootZ(track, 0)
         print str(headX) + " " + str(headY) + " " + str(headZ)
