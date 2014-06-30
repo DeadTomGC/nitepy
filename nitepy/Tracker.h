@@ -14,7 +14,6 @@ using namespace openni;
 class Tracker{
 private:
 	int* IDs;
-	
 	int IDCount;
 	bool running;
 	Ptr<FaceRecognizer> model;
@@ -33,7 +32,7 @@ public:
 		peopleIDs=new int[maxUsers];
 		IDCount=0;
 		nite::NiTE::initialize();
-
+		OpenNI::initialize();
 		
 		if ( device.open( openni::ANY_DEVICE ) != 0 )
 		{
@@ -84,7 +83,7 @@ public:
 			printf("Get next frame failed\n");
 			
 		}
-
+		
 		users = &userTrackerFrame.getUsers();
 		for (int i = 0; i < users->getSize(); ++i)
 		{
@@ -114,7 +113,11 @@ public:
 			}
 			if(found){
 				temp[itemp]=(*users)[i].getId();
-				tempPeople[itemp]=peopleIDs[j];
+				if(peopleIDs[j]>=0){
+					tempPeople[itemp]=peopleIDs[j];
+				}else{
+					tempPeople[itemp]=-2;
+				}
 				itemp++;
 			}else{
 				temp[itemp]=(*users)[i].getId();
@@ -140,12 +143,14 @@ public:
 				vector< Rect_<int> > faces;
 				haar_cascade.detectMultiScale(colorcv, faces);
 				for(unsigned int i=0;i<faces.size();i++){
-					std::cerr<<faces[i].x<<" "<<faces[i].y<<std::endl;
+					std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
 					int j=0;
 					bool match = false;
 					float x,y;
 					for(j=0;j<users->getSize();j++){//3D->2D
 						userTracker.convertJointCoordinatesToDepth((*users)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x,(*users)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().y,(*users)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z,&x,&y);
+						x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
+						y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
 						std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
 						if(x>faces[i].x && x<faces[i].x+faces[i].width){
 							if(y>faces[i].y && y<faces[i].y+faces[i].height){
@@ -155,9 +160,13 @@ public:
 						}
 					}
 					if(match && peopleIDs[j]<0){//take note of this
+						std::cerr<<"resizing\n";
+						cv::imshow( "RGB2", colorcv );
 						Mat temp = colorcv(faces[i]);
-						cv::resize(temp, faces_resized[j], Size(640, 480), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with users
+						cv::imshow( "RGB1", temp );
+						cv::resize(temp, faces_resized[j], Size(480, 480), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with users
 						peopleIDs[j]=-1;//try to identify
+						std::cerr<<"face put up for identification\n";
 					}
 
 				}
@@ -168,13 +177,20 @@ public:
 
 		//identify faces if possible
 		for(int i = 0; i < IDCount; i++){
+			std::cerr<<"identifying...\n";
 			if(peopleIDs[i] != -1){
 				continue; //if the value is not -1, don't check
 			}
+			std::cerr<<peopleIDs[i]<<std::endl;
+			cv::Mat gray;
+			cv::cvtColor(faces_resized[i], gray, CV_BGR2GRAY);
+			cv::imshow( "RGB", gray );
+			cv::waitKey( 1 );
+			system("pause");
 			int predictedLabel = -1;
 			double confidence = 0.0;
 			//does the facial recognition prediction based off of the trained eigenface
-			model->predict(faces_resized[i], predictedLabel, confidence);
+			model->predict(gray, predictedLabel, confidence);
 			peopleIDs[i] = predictedLabel; //label for person is placed in peopleIDs, -1 if unrecognized
 		}
 		for(int i=0;i<IDCount;i++){
