@@ -144,7 +144,7 @@ public:
 				vector< Rect_<int> > faces;
 				haar_cascade.detectMultiScale(colorcv, faces);
 				for(unsigned int i=0;i<faces.size();i++){
-					std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
+					//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
 					int j=0;
 					bool match = false;
 					float x,y;
@@ -152,7 +152,7 @@ public:
 						userTracker.convertJointCoordinatesToDepth((*users)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x,(*users)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().y,(*users)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z,&x,&y);
 						x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
 						y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
-						std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
+						//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
 						if(x>faces[i].x && x<faces[i].x+faces[i].width){
 							if(y>faces[i].y && y<faces[i].y+faces[i].height){
 								match = true;//face is found for skeleton j
@@ -161,12 +161,12 @@ public:
 						}
 					}
 					if(match && peopleIDs[j]<0){//take note of this
-						std::cerr<<"resizing\n";
+						//std::cerr<<"resizing\n";
 						Mat temp = colorcv(faces[i]);
 						cv::cvtColor(temp, temp, CV_BGR2GRAY);
 						cv::resize(temp, faces_resized[j], Size(480, 480), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with users
 						peopleIDs[j]=-1;//try to identify
-						std::cerr<<"face put up for identification\n";
+						//std::cerr<<"face put up for identification\n";
 					}
 
 				}
@@ -177,13 +177,13 @@ public:
 
 		//identify faces if possible
 		for(int i = 0; i < IDCount; i++){
-			std::cerr<<"identifying...\n";
+			//std::cerr<<"identifying...\n";
 			if(peopleIDs[i] != -1){
 				continue; //if the value is not -1, don't check
 			}
-			std::cerr<<peopleIDs[i]<<std::endl;
-			cv::imshow( "RGB", faces_resized[i] );
-			cv::waitKey( 1 );
+			
+			//cv::imshow( "RGB", faces_resized[i] );
+			//cv::waitKey( 1 );
 			//char * filename=new char[30];
 			//sprintf(filename,"myTest/img%d.jpg\0",img);
 			//imwrite(filename, faces_resized[i]);
@@ -193,11 +193,15 @@ public:
 			double confidence = 0.0;
 			//does the facial recognition prediction based off of the trained eigenface
 			model->predict(faces_resized[i], predictedLabel, confidence);
-			std::cerr<<confidence<<std::endl;
+			if(predictedLabel!=-1){
+				std::cerr<<predictedLabel<<std::endl;
+				std::cerr<<confidence<<std::endl;
+
+			}
 			peopleIDs[i] = predictedLabel; //label for person is placed in peopleIDs, -1 if unrecognized
 		}
 		for(int i=0;i<IDCount;i++){
-			std::cerr<<"skeleton "<<i<<" is person "<<peopleIDs[i]<<"\n";
+			//std::cerr<<"skeleton "<<i<<" is person "<<peopleIDs[i]<<"\n";
 
 		}
 
