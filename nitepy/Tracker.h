@@ -97,6 +97,7 @@ public:
 			
 	}
 	void detectPeople(){
+		static int img=0;
 		Mat faces_resized[maxUsers];
 		int* temp = new int[maxUsers];
 		int* tempPeople = new int[maxUsers];
@@ -161,9 +162,8 @@ public:
 					}
 					if(match && peopleIDs[j]<0){//take note of this
 						std::cerr<<"resizing\n";
-						cv::imshow( "RGB2", colorcv );
 						Mat temp = colorcv(faces[i]);
-						cv::imshow( "RGB1", temp );
+						cv::cvtColor(temp, temp, CV_BGR2GRAY);
 						cv::resize(temp, faces_resized[j], Size(480, 480), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with users
 						peopleIDs[j]=-1;//try to identify
 						std::cerr<<"face put up for identification\n";
@@ -182,15 +182,18 @@ public:
 				continue; //if the value is not -1, don't check
 			}
 			std::cerr<<peopleIDs[i]<<std::endl;
-			cv::Mat gray;
-			cv::cvtColor(faces_resized[i], gray, CV_BGR2GRAY);
-			cv::imshow( "RGB", gray );
+			cv::imshow( "RGB", faces_resized[i] );
 			cv::waitKey( 1 );
-			system("pause");
+			//char * filename=new char[30];
+			//sprintf(filename,"myTest/img%d.jpg\0",img);
+			//imwrite(filename, faces_resized[i]);
+			//img++;
+			//system("pause");
 			int predictedLabel = -1;
 			double confidence = 0.0;
 			//does the facial recognition prediction based off of the trained eigenface
-			model->predict(gray, predictedLabel, confidence);
+			model->predict(faces_resized[i], predictedLabel, confidence);
+			std::cerr<<confidence<<std::endl;
 			peopleIDs[i] = predictedLabel; //label for person is placed in peopleIDs, -1 if unrecognized
 		}
 		for(int i=0;i<IDCount;i++){
@@ -241,7 +244,7 @@ public:
 
 		//9500 chosen as threshold for successful recognition
 		//0 means that all Eigenfaces should be used
-		model = createEigenFaceRecognizer(0, 9500.0);
+		model = createEigenFaceRecognizer(0, 10500.0);
 		//train the faceRecognizer based on the images and labels from the CSV
 		model->train(images, labels);
 
