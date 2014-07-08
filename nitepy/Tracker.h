@@ -117,7 +117,7 @@ public:
 		int* temp = new int[maxUsers];
 		int* tempPeople = new int[maxUsers];
 		int itemp=0;
-		
+		Sleep(200);
 		for(int i=0; i<userSnap->getSize();i++){//update list of ID's and people
 			bool found=false;
 			int j=0;
@@ -147,9 +147,9 @@ public:
 		peopleIDs=tempPeople;
 		IDCount=userSnap->getSize();
 		//Find faces and match them to skeletons
-
+		
 		Mat colorcv( cv::Size( 640, 480 ), CV_8UC3, NULL );
-
+		Sleep(200);
 			if ( colorFrame.isValid() ){
 				colorcv.data = (uchar*) colorFrame.getData();
 				cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
@@ -183,7 +183,7 @@ public:
 
 				}
 			}
-            
+            Sleep(200);
 
 		
 
@@ -212,10 +212,7 @@ public:
 			}
 			peopleIDs[i] = predictedLabel; //label for person is placed in peopleIDs, -1 if unrecognized
 		}
-		for(int i=0;i<IDCount;i++){
-			//std::cerr<<"skeleton "<<i<<" is person "<<peopleIDs[i]<<"\n";
-
-		}
+		
 
 	}
 	void read_csv(const string& filename, vector<Mat>& images, vector<int>& labels, char separator = ';') {
