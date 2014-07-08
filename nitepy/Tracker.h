@@ -10,7 +10,7 @@
 
 using namespace cv;
 using namespace openni;
-#define maxUsers 15
+#define maxUsers 5
 class Tracker{
 private:
 	int* IDs;
@@ -25,6 +25,8 @@ private:
 	nite::Status niteRc;
 	nite::UserTrackerFrameRef userTrackerFrame;
 	const nite::Array<nite::UserData>* users;
+	const nite::Array<nite::UserData>* userSnap;
+	VideoFrameRef colorFrame;
 public:
 	int* peopleIDs;
 	Tracker(void){
@@ -96,6 +98,19 @@ public:
 		}
 			
 	}
+	void takeSnapShot(){
+			int changedIndex;
+			userSnap=&userTrackerFrame.getUsers();
+			if( device.isValid() ){
+				OpenNI::waitForAnyStream( &stream, 1, &changedIndex );
+				color.readFrame( &colorFrame );
+			}
+		
+	}
+
+
+
+
 	void detectPeople(){
 		static int img=0;
 		Mat faces_resized[maxUsers];
@@ -103,17 +118,17 @@ public:
 		int* tempPeople = new int[maxUsers];
 		int itemp=0;
 		
-		for(int i=0; i<users->getSize();i++){//update list of ID's and people
+		for(int i=0; i<userSnap->getSize();i++){//update list of ID's and people
 			bool found=false;
 			int j=0;
 			for(j=0; j<IDCount;j++){
-				if(IDs[j]==(*users)[i].getId()){
+				if(IDs[j]==(*userSnap)[i].getId()){
 					found=true;
 					break;
 				}
 			}
 			if(found){
-				temp[itemp]=(*users)[i].getId();
+				temp[itemp]=(*userSnap)[i].getId();
 				if(peopleIDs[j]>=0){
 					tempPeople[itemp]=peopleIDs[j];
 				}else{
@@ -121,7 +136,7 @@ public:
 				}
 				itemp++;
 			}else{
-				temp[itemp]=(*users)[i].getId();
+				temp[itemp]=(*userSnap)[i].getId();
 				tempPeople[itemp]=-2;
 				itemp++;
 			}
@@ -130,14 +145,11 @@ public:
 		delete peopleIDs;
 		IDs=temp;
 		peopleIDs=tempPeople;
-		IDCount=users->getSize();
+		IDCount=userSnap->getSize();
 		//Find faces and match them to skeletons
-		int changedIndex;
-		VideoFrameRef colorFrame;
+
 		Mat colorcv( cv::Size( 640, 480 ), CV_8UC3, NULL );
-		if( device.isValid() ){
-			OpenNI::waitForAnyStream( &stream, 1, &changedIndex );
-			color.readFrame( &colorFrame );
+
 			if ( colorFrame.isValid() ){
 				colorcv.data = (uchar*) colorFrame.getData();
 				cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
@@ -148,8 +160,8 @@ public:
 					int j=0;
 					bool match = false;
 					float x,y;
-					for(j=0;j<users->getSize();j++){//3D->2D
-						userTracker.convertJointCoordinatesToDepth((*users)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x,(*users)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().y,(*users)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z,&x,&y);
+					for(j=0;j<userSnap->getSize();j++){//3D->2D
+						userTracker.convertJointCoordinatesToDepth((*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x,(*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().y,(*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z,&x,&y);
 						x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
 						y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
 						//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
@@ -164,7 +176,7 @@ public:
 						//std::cerr<<"resizing\n";
 						Mat temp = colorcv(faces[i]);
 						cv::cvtColor(temp, temp, CV_BGR2GRAY);
-						cv::resize(temp, faces_resized[j], Size(480, 480), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with users
+						cv::resize(temp, faces_resized[j], Size(480, 480), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
 						peopleIDs[j]=-1;//try to identify
 						//std::cerr<<"face put up for identification\n";
 					}
@@ -173,7 +185,7 @@ public:
 			}
             
 
-		}
+		
 
 		//identify faces if possible
 		for(int i = 0; i < IDCount; i++){

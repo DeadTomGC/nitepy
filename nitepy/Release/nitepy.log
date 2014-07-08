@@ -1,4 +1,4 @@
-﻿Build started 7/1/2014 2:24:19 AM.
+﻿Build started 7/8/2014 10:02:20 AM.
      1>Project "C:\Users\DeadTomGC\documents\visual studio 2010\Projects\nitepy\nitepy\nitepy.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Release\nitepy.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -20,4 +20,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:03.26
+Time Elapsed 00:00:01.64

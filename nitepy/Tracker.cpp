@@ -9,6 +9,7 @@ extern "C" {
     trackerdll_api bool isUserTracked(Tracker* tracker,int i){ return tracker->isUserTracked(i);}
 	trackerdll_api int getUserID(Tracker* tracker,int i){return tracker->getUserID(i);}
 	trackerdll_api void detectPeople(Tracker* tracker){ tracker->detectPeople();}
+	trackerdll_api void takeSnapShot(Tracker* tracker){ tracker->takeSnapShot();}
 	trackerdll_api int getUserPersonID(Tracker* tracker,int i){return tracker->peopleIDs[i];}
 	trackerdll_api float getUserSkeletonHeadConf(Tracker* tracker,int i){ return tracker->getUserSkeletonHeadConf(i);}
 	trackerdll_api float getUserSkeletonHeadX(Tracker* tracker,int i){ return tracker->getUserSkeletonHeadX(i);}
