@@ -27,9 +27,14 @@ private:
 	const nite::Array<nite::UserData>* users;
 	const nite::Array<nite::UserData>* userSnap;
 	VideoFrameRef colorFrame;
+	Mat faces_resized[maxUsers];
+	int temp[maxUsers];
+	int tempPeople[maxUsers];
+	int itemp;
+	Mat &colorcv;
 public:
 	int* peopleIDs;
-	Tracker(void){
+	Tracker(Mat* c=(new Mat( cv::Size( 640, 480 ), CV_8UC3, NULL ))):colorcv(*c){
 		IDs=new int[maxUsers];
 		peopleIDs=new int[maxUsers];
 		IDCount=0;
@@ -111,13 +116,14 @@ public:
 
 
 
-	void detectPeople(){
+	void detectPeople1(){
 		static int img=0;
-		Mat faces_resized[maxUsers];
-		int* temp = new int[maxUsers];
-		int* tempPeople = new int[maxUsers];
-		int itemp=0;
-		Sleep(200);
+		//Mat faces_resized[maxUsers];
+		itemp=0;
+		
+		
+	}
+	void detectPeople2(){
 		for(int i=0; i<userSnap->getSize();i++){//update list of ID's and people
 			bool found=false;
 			int j=0;
@@ -148,8 +154,9 @@ public:
 		IDCount=userSnap->getSize();
 		//Find faces and match them to skeletons
 		
-		Mat colorcv( cv::Size( 640, 480 ), CV_8UC3, NULL );
-		Sleep(200);
+		
+	}
+	void detectPeople3(){
 			if ( colorFrame.isValid() ){
 				colorcv.data = (uchar*) colorFrame.getData();
 				cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
@@ -183,10 +190,10 @@ public:
 
 				}
 			}
-            Sleep(200);
+	}
 
 		
-
+	void detectPeople4(){
 		//identify faces if possible
 		for(int i = 0; i < IDCount; i++){
 			//std::cerr<<"identifying...\n";
