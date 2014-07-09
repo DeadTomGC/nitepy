@@ -116,14 +116,11 @@ public:
 
 
 
-	void detectPeople1(){
+	void detectPeople(){
 		static int img=0;
 		//Mat faces_resized[maxUsers];
 		itemp=0;
-		
-		
-	}
-	void detectPeople2(){
+
 		for(int i=0; i<userSnap->getSize();i++){//update list of ID's and people
 			bool found=false;
 			int j=0;
@@ -154,56 +151,55 @@ public:
 		IDCount=userSnap->getSize();
 		//Find faces and match them to skeletons
 		
-		
-	}
-	void detectPeople3(){
-			if ( colorFrame.isValid() ){
-				colorcv.data = (uchar*) colorFrame.getData();
-				cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
-				vector< Rect_<int> > faces;
-				Mat temp2;
-				cv::resize(colorcv, temp2, Size(320, 240), 1.0, 1.0, INTER_CUBIC);//scaling by 2
-				haar_cascade.detectMultiScale(temp2, faces);
-				
-				for(unsigned int i=0;i<faces.size();i++){
-					//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
-					int j=0;
-					bool match = false;
-					float x,y;
-					for(j=0;j<userSnap->getSize();j++){//3D->2D
-						userTracker.convertJointCoordinatesToDepth((*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x,(*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().y,(*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z,&x,&y);
-						x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
-						y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
-						//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
-						if(x>faces[i].x*2 && x<faces[i].x*2+faces[i].width*2){
-							if(y>faces[i].y*2 && y<faces[i].y*2+faces[i].height*2){
-								match = true;//face is found for skeleton j
-								break;
-							}
+
+		if ( colorFrame.isValid() && userSnap->getSize()>=1){
+			colorcv.data = (uchar*) colorFrame.getData();
+			cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
+			vector< Rect_<int> > faces;
+			Mat temp2;
+			cv::resize(colorcv, temp2, Size(320, 240), 1.0, 1.0, INTER_CUBIC);//scaling down by 2
+			haar_cascade.detectMultiScale(temp2, faces);
+
+			for(unsigned int i=0;i<faces.size();i++){
+				//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
+				int j=0;
+				bool match = false;
+				float x,y;
+				for(j=0;j<userSnap->getSize();j++){//3D->2D
+					userTracker.convertJointCoordinatesToDepth((*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x,(*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().y,(*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z,&x,&y);
+					x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
+					y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
+					//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
+					if(x>faces[i].x*2 && x<faces[i].x*2+faces[i].width*2){
+						if(y>faces[i].y*2 && y<faces[i].y*2+faces[i].height*2){
+							match = true;//face is found for skeleton j
+							break;
 						}
 					}
-					if(match && peopleIDs[j]<0){//take note of this
-						//std::cerr<<"resizing\n";
-						Mat temp = colorcv(faces[i]);
-						cv::cvtColor(temp, temp, CV_BGR2GRAY);
-						cv::resize(temp, faces_resized[j], Size(480, 480), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
-						peopleIDs[j]=-1;//try to identify
-						//std::cerr<<"face put up for identification\n";
-					}
-
 				}
-			}
-	}
+				faces[i].x=faces[i].x*2;
+				faces[i].y=faces[i].y*2;
+				faces[i].height=faces[i].height*2;
+				faces[i].width=faces[i].width*2;
+				if(match && peopleIDs[j]<0){//take note of this
+					//std::cerr<<"resizing\n";
+					Mat temp = colorcv(faces[i]);
+					cv::cvtColor(temp, temp, CV_BGR2GRAY);
+					cv::resize(temp, faces_resized[j], Size(480, 480), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+					peopleIDs[j]=-1;//try to identify
+					//std::cerr<<"face put up for identification\n";
+				}
 
-		
-	void detectPeople4(){
+			}
+		}
+
 		//identify faces if possible
 		for(int i = 0; i < IDCount; i++){
 			//std::cerr<<"identifying...\n";
 			if(peopleIDs[i] != -1){
 				continue; //if the value is not -1, don't check
 			}
-			
+
 			//cv::imshow( "RGB", faces_resized[i] );
 			//cv::waitKey( 1 );
 			//char * filename=new char[30];
@@ -222,7 +218,7 @@ public:
 			}
 			peopleIDs[i] = predictedLabel; //label for person is placed in peopleIDs, -1 if unrecognized
 		}
-		
+
 
 	}
 	void read_csv(const string& filename, vector<Mat>& images, vector<int>& labels, char separator = ';') {
