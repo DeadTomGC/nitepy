@@ -161,7 +161,10 @@ public:
 				colorcv.data = (uchar*) colorFrame.getData();
 				cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
 				vector< Rect_<int> > faces;
-				haar_cascade.detectMultiScale(colorcv, faces);
+				Mat temp2;
+				cv::resize(colorcv, temp2, Size(320, 240), 1.0, 1.0, INTER_CUBIC);//scaling by 2
+				haar_cascade.detectMultiScale(temp2, faces);
+				
 				for(unsigned int i=0;i<faces.size();i++){
 					//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
 					int j=0;
@@ -172,8 +175,8 @@ public:
 						x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
 						y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
 						//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
-						if(x>faces[i].x && x<faces[i].x+faces[i].width){
-							if(y>faces[i].y && y<faces[i].y+faces[i].height){
+						if(x>faces[i].x*2 && x<faces[i].x*2+faces[i].width*2){
+							if(y>faces[i].y*2 && y<faces[i].y*2+faces[i].height*2){
 								match = true;//face is found for skeleton j
 								break;
 							}
