@@ -150,40 +150,40 @@ public:
 		peopleIDs=tempPeople;
 		IDCount=userSnap->getSize();
 		//Find faces and match them to skeletons
-		
+		Mat ROI;
 
 		if ( colorFrame.isValid() && userSnap->getSize()>=1){
 			colorcv.data = (uchar*) colorFrame.getData();
 			cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
 			vector< Rect_<int> > faces;
-			Mat temp2;
-			cv::resize(colorcv, temp2, Size(320, 240), 1.0, 1.0, INTER_CUBIC);//scaling down by 2
-			haar_cascade.detectMultiScale(temp2, faces);
 
-			for(unsigned int i=0;i<faces.size();i++){
-				//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
-				int j=0;
-				bool match = false;
+			for(int j=0;j<userSnap->getSize();j++){
 				float x,y;
-				for(j=0;j<userSnap->getSize();j++){//3D->2D
-					userTracker.convertJointCoordinatesToDepth((*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x,(*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().y,(*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z,&x,&y);
-					x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
-					y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
+				unsigned int i=0;
+				bool match;
+				userTracker.convertJointCoordinatesToDepth((*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x,(*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().y,(*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z,&x,&y);
+				x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
+				y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
+
+				cv::Rect face(x-50,y-50,100,100);
+				ROI=colorcv(face);
+				haar_cascade.detectMultiScale(ROI, faces);
+
+				for(i=0;i<faces.size();i++){
+					//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
+
 					//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
-					if(x>faces[i].x*2 && x<faces[i].x*2+faces[i].width*2){
-						if(y>faces[i].y*2 && y<faces[i].y*2+faces[i].height*2){
+					if(x>faces[i].x && x<faces[i].x+faces[i].width){
+						if(y>faces[i].y && y<faces[i].y+faces[i].height){
 							match = true;//face is found for skeleton j
 							break;
 						}
 					}
 				}
-				faces[i].x=faces[i].x*2;
-				faces[i].y=faces[i].y*2;
-				faces[i].height=faces[i].height*2;
-				faces[i].width=faces[i].width*2;
+
 				if(match && peopleIDs[j]<0){//take note of this
 					//std::cerr<<"resizing\n";
-					Mat temp = colorcv(faces[i]);
+					Mat temp = ROI(faces[i]);
 					cv::cvtColor(temp, temp, CV_BGR2GRAY);
 					cv::resize(temp, faces_resized[j], Size(480, 480), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
 					peopleIDs[j]=-1;//try to identify
@@ -192,7 +192,7 @@ public:
 
 			}
 		}
-
+	
 		//identify faces if possible
 		for(int i = 0; i < IDCount; i++){
 			//std::cerr<<"identifying...\n";
