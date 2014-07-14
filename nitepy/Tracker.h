@@ -165,31 +165,34 @@ public:
 				x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
 				y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
 
-				cv::Rect face(x-50,y-50,100,100);
-				ROI=colorcv(face);
-				haar_cascade.detectMultiScale(ROI, faces);
+				if(x>50 && y>50 && x<590 && y<430){
 
-				for(i=0;i<faces.size();i++){
-					//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
+					cv::Rect face(x-50,y-50,100,100);
+					ROI=colorcv(face);
+					haar_cascade.detectMultiScale(ROI, faces);
 
-					//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
-					if(x>faces[i].x && x<faces[i].x+faces[i].width){
-						if(y>faces[i].y && y<faces[i].y+faces[i].height){
-							match = true;//face is found for skeleton j
-							break;
+					for(i=0;i<faces.size();i++){
+						//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
+
+						//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
+						if(x>faces[i].x && x<faces[i].x+faces[i].width){
+							if(y>faces[i].y && y<faces[i].y+faces[i].height){
+								match = true;//face is found for skeleton j
+								break;
+							}
 						}
 					}
-				}
 
-				if(match && peopleIDs[j]<0){//take note of this
-					//std::cerr<<"resizing\n";
-					Mat temp = ROI(faces[i]);
-					cv::cvtColor(temp, temp, CV_BGR2GRAY);
-					cv::resize(temp, faces_resized[j], Size(480, 480), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
-					peopleIDs[j]=-1;//try to identify
-					//std::cerr<<"face put up for identification\n";
-				}
+					if(match && peopleIDs[j]<0){//take note of this
+						//std::cerr<<"resizing\n";
+						Mat temp = ROI(faces[i]);
+						cv::cvtColor(temp, temp, CV_BGR2GRAY);
+						cv::resize(temp, faces_resized[j], Size(480, 480), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+						peopleIDs[j]=-1;//try to identify
+						//std::cerr<<"face put up for identification\n";
+					}
 
+				}
 			}
 		}
 	
