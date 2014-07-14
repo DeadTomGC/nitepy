@@ -156,15 +156,15 @@ public:
 			colorcv.data = (uchar*) colorFrame.getData();
 			cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
 			vector< Rect_<int> > faces;
-
+			//std::cerr<<"entering for\n";
 			for(int j=0;j<userSnap->getSize();j++){
 				float x,y;
 				unsigned int i=0;
-				bool match;
+				bool match=false;
 				userTracker.convertJointCoordinatesToDepth((*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x,(*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().y,(*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z,&x,&y);
 				x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
 				y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
-
+				//std::cerr<<"x="<<x<<" y="<<y<<"\n";
 				if(x>50 && y>50 && x<590 && y<430){
 
 					cv::Rect face(x-50,y-50,100,100);
@@ -175,14 +175,15 @@ public:
 						//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
 
 						//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
-						if(x>faces[i].x && x<faces[i].x+faces[i].width){
-							if(y>faces[i].y && y<faces[i].y+faces[i].height){
+						if(50>faces[i].x && 50<faces[i].x+faces[i].width){
+							if(50>faces[i].y && 50<faces[i].y+faces[i].height){
 								match = true;//face is found for skeleton j
 								break;
 							}
 						}
 					}
-
+					//std::cerr<<"MATCH WAS "<<match<<"\n";
+					//std::cerr<<"chose face "<<i<<"\n";
 					if(match && peopleIDs[j]<0){//take note of this
 						//std::cerr<<"resizing\n";
 						Mat temp = ROI(faces[i]);
@@ -195,7 +196,7 @@ public:
 				}
 			}
 		}
-	
+		//std::cerr<<"identifying face\n";
 		//identify faces if possible
 		for(int i = 0; i < IDCount; i++){
 			//std::cerr<<"identifying...\n";
