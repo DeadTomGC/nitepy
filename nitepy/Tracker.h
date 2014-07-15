@@ -32,9 +32,13 @@ private:
 	int tempPeople[maxUsers];
 	int itemp;
 	Mat &colorcv;
+	//std::ofstream file; //remove
 public:
 	int* peopleIDs;
 	Tracker(Mat* c=(new Mat( cv::Size( 640, 480 ), CV_8UC3, NULL ))):colorcv(*c){
+
+		//file.open("img.txt");//remove
+
 		IDs=new int[maxUsers];
 		peopleIDs=new int[maxUsers];
 		IDCount=0;
@@ -188,7 +192,14 @@ public:
 						//std::cerr<<"resizing\n";
 						Mat temp = ROI(faces[i]);
 						cv::cvtColor(temp, temp, CV_BGR2GRAY);
-						cv::resize(temp, faces_resized[j], Size(480, 480), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+						face.x=25;
+						face.y=50;
+						face.height=180;
+						face.width=180;
+						cv::resize(temp, faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+						faces_resized[j] = faces_resized[j](face);
+						cv::resize(faces_resized[j], faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+						cv::equalizeHist(faces_resized[j],faces_resized[j]);
 						peopleIDs[j]=-1;//try to identify
 						//std::cerr<<"face put up for identification\n";
 					}
@@ -196,20 +207,22 @@ public:
 				}
 			}
 		}
-		//std::cerr<<"identifying face\n";
+		//std::cerr<<"checking face array\n";
 		//identify faces if possible
 		for(int i = 0; i < IDCount; i++){
 			//std::cerr<<"identifying...\n";
 			if(peopleIDs[i] != -1){
 				continue; //if the value is not -1, don't check
 			}
-
+			//std::cerr<<"identifying face"<<i<<"\n";
 			//cv::imshow( "RGB", faces_resized[i] );
 			//cv::waitKey( 1 );
-			//char * filename=new char[30];
-			//sprintf(filename,"myTest/img%d.jpg\0",img);
-			//imwrite(filename, faces_resized[i]);
-			//img++;
+			//char * filename=new char[30];//remove / change
+			//sprintf(filename,"myTest/chris%d.jpg\0",img); //remove / change
+			//file<<filename<<";1\n";//remove / change
+			//file.flush();//remove / change
+			//imwrite(filename, faces_resized[i]);//remove / change
+			//img++;//remove / change
 			//system("pause");
 			int predictedLabel = -1;
 			double confidence = 0.0;
@@ -267,7 +280,7 @@ public:
 
 		//9500 chosen as threshold for successful recognition
 		//0 means that all Eigenfaces should be used
-		model = createEigenFaceRecognizer(0, 10500.0);
+		model = createFisherFaceRecognizer(0, 2000.0);
 		//train the faceRecognizer based on the images and labels from the CSV
 		model->train(images, labels);
 
