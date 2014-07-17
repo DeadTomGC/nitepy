@@ -25,7 +25,9 @@ private:
 	nite::Status niteRc;
 	nite::UserTrackerFrameRef userTrackerFrame;
 	const nite::Array<nite::UserData>* users;
-	const nite::Array<nite::UserData>* userSnap;
+	//const nite::Array<nite::UserData>* userSnap;
+	nite::UserData* userSnap;
+	int userCount;
 	VideoFrameRef colorFrame;
 	Mat faces_resized[maxUsers];
 	int temp[maxUsers];
@@ -109,7 +111,12 @@ public:
 	}
 	void takeSnapShot(){
 			int changedIndex;
-			userSnap=&userTrackerFrame.getUsers();
+			users=&userTrackerFrame.getUsers();
+			userCount = users->getSize();
+			userSnap = new nite::UserData[users->getSize()];
+			for(int i=0;i<userCount;i++){
+				userSnap[i]=(*users)[i];
+			}
 			if( device.isValid() ){
 				OpenNI::waitForAnyStream( &stream, 1, &changedIndex );
 				color.readFrame( &colorFrame );
@@ -125,17 +132,17 @@ public:
 		//Mat faces_resized[maxUsers];
 		itemp=0;
 
-		for(int i=0; i<userSnap->getSize();i++){//update list of ID's and people
+		for(int i=0; i<userCount;i++){//update list of ID's and people
 			bool found=false;
 			int j=0;
 			for(j=0; j<IDCount;j++){
-				if(IDs[j]==(*userSnap)[i].getId()){
+				if(IDs[j]==userSnap[i].getId()){
 					found=true;
 					break;
 				}
 			}
 			if(found){
-				temp[itemp]=(*userSnap)[i].getId();
+				temp[itemp]=userSnap[i].getId();
 				if(peopleIDs[j]>=0){
 					tempPeople[itemp]=peopleIDs[j];
 				}else{
@@ -143,7 +150,7 @@ public:
 				}
 				itemp++;
 			}else{
-				temp[itemp]=(*userSnap)[i].getId();
+				temp[itemp]=userSnap[i].getId();
 				tempPeople[itemp]=-2;
 				itemp++;
 			}
@@ -152,20 +159,20 @@ public:
 		delete peopleIDs;
 		IDs=temp;
 		peopleIDs=tempPeople;
-		IDCount=userSnap->getSize();
+		IDCount=userCount;
 		//Find faces and match them to skeletons
 		Mat ROI;
 
-		if ( colorFrame.isValid() && userSnap->getSize()>=1){
+		if ( colorFrame.isValid() && userCount>=1){
 			colorcv.data = (uchar*) colorFrame.getData();
 			cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
 			vector< Rect_<int> > faces;
 			//std::cerr<<"entering for\n";
-			for(int j=0;j<userSnap->getSize();j++){
+			for(int j=0;j<userCount;j++){
 				float x,y;
 				unsigned int i=0;
 				bool match=false;
-				userTracker.convertJointCoordinatesToDepth((*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x,(*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().y,(*userSnap)[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z,&x,&y);
+				userTracker.convertJointCoordinatesToDepth(userSnap[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x,userSnap[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().y,userSnap[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z,&x,&y);
 				x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
 				y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
 				//std::cerr<<"x="<<x<<" y="<<y<<"\n";
@@ -236,7 +243,7 @@ public:
 			peopleIDs[i] = predictedLabel; //label for person is placed in peopleIDs, -1 if unrecognized
 		}
 
-
+		delete[] userSnap;
 	}
 	void read_csv(const string& filename, vector<Mat>& images, vector<int>& labels, char separator = ';') {
 		std::ifstream file(filename.c_str());
