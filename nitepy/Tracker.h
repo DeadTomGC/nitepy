@@ -131,7 +131,7 @@ public:
 		static int img=0;
 		//Mat faces_resized[maxUsers];
 		itemp=0;
-		std::cerr<<"checkout last recogition\n";
+		//std::cerr<<"checkout last recogition\n";
 		for(int i=0; i<userCount;i++){//update list of ID's and people
 			bool found=false;
 			int j=0;
@@ -162,7 +162,7 @@ public:
 		IDCount=userCount;
 		//Find faces and match them to skeletons
 		Mat ROI;
-		std::cerr<<"check faces\n";
+		//std::cerr<<"check faces\n";
 		if ( colorFrame.isValid() && userCount>=1){
 			colorcv.data = (uchar*) colorFrame.getData();
 			cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
@@ -214,7 +214,7 @@ public:
 				}
 			}
 		}
-		std::cerr<<"checking face array\n";
+		//std::cerr<<"checking face array\n";
 		//identify faces if possible
 		for(int i = 0; i < IDCount; i++){
 			//std::cerr<<"identifying...\n";
