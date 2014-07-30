@@ -2,8 +2,8 @@
 
  
  
-extern "C" {
-    trackerdll_api Tracker* Tracker_new(){ return new Tracker(); }
+extern "C" { //these are all C wrappers to C++ code so that these methods may be used in python
+    trackerdll_api Tracker* Tracker_new(){ return new Tracker(); } 
     trackerdll_api void loop(Tracker* tracker){ tracker->loop();}
     trackerdll_api int getUsersCount(Tracker* tracker){ return tracker->getUsersCount();}
     trackerdll_api bool isUserTracked(Tracker* tracker,int i){ return tracker->isUserTracked(i);}
