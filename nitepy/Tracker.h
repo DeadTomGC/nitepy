@@ -33,7 +33,7 @@ private:
 	int tempPeople[maxUsers]; //an array for comparing the old and new
 	int itemp; //a temporary counter for temp and tempPeople
 	Mat &colorcv; //image from a frame
-	//std::ofstream file; //remove
+	//std::ofstream file; //remove (look for and uncomment lines with remove to be able to make the changes needed to record training images)
 public:
 	int* peopleIDs; //this is the array of ID's for peopl who have been recognized with face recognition (non negative numbers are valid ID's)
 	Tracker(Mat* c=(new Mat( cv::Size( 640, 480 ), CV_8UC3, NULL ))):colorcv(*c){
