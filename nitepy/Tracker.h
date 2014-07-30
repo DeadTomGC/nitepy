@@ -13,30 +13,29 @@ using namespace openni;
 #define maxUsers 15
 class Tracker{
 private:
-	int* IDs;
-	int IDCount;
-	bool running;
-	Ptr<FaceRecognizer> model;
-	Device device;
-	VideoStream color;
-	VideoStream* stream;
-	CascadeClassifier haar_cascade;
-	nite::UserTracker userTracker;
-	nite::Status niteRc;
-	nite::UserTrackerFrameRef userTrackerFrame;
-	const nite::Array<nite::UserData>* users;
-	//const nite::Array<nite::UserData>* userSnap;
-	nite::UserData* userSnap;
-	int userCount;
-	VideoFrameRef colorFrame;
-	Mat faces_resized[maxUsers];
-	int temp[maxUsers];
-	int tempPeople[maxUsers];
-	int itemp;
-	Mat &colorcv;
+	int* IDs; //this is the array of skeleton ID's 
+	int IDCount; //number of ID's that are valid
+	bool running;//if it's still running
+	Ptr<FaceRecognizer> model; //pointer to the face Recognizing model
+	Device device;  //the Device object for the Xtion PRO
+	VideoStream color; //our RGB stream
+	VideoStream* stream; 
+	CascadeClassifier haar_cascade;//Our face detector
+	nite::UserTracker userTracker;//our skeleton tracker (from NITE)
+	nite::Status niteRc; //a variable for storing errors (used in many places)
+	nite::UserTrackerFrameRef userTrackerFrame;//a single skeleton data frame
+	const nite::Array<nite::UserData>* users;//all the users skeletons in one array
+	nite::UserData* userSnap;// a snapshot of where the skeletons are to be used in face recognition
+	int userCount;//number of users at that time
+	VideoFrameRef colorFrame;  //a single color frame
+	Mat faces_resized[maxUsers]; //the faces that will be recognized by the recognizer after being detected
+	int temp[maxUsers]; //an array used for comparing the old and new skeletons and which have been identified
+	int tempPeople[maxUsers]; //an array for comparing the old and new
+	int itemp; //a temporary counter for temp and tempPeople
+	Mat &colorcv; //image from a frame
 	//std::ofstream file; //remove
 public:
-	int* peopleIDs;
+	int* peopleIDs; //this is the array of ID's for peopl who have been recognized with face recognition (non negative numbers are valid ID's)
 	Tracker(Mat* c=(new Mat( cv::Size( 640, 480 ), CV_8UC3, NULL ))):colorcv(*c){
 
 		//file.open("img.txt");//remove
