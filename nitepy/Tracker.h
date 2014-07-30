@@ -140,7 +140,7 @@ public:
 					break;
 				}
 			}
-			if(found){
+			if(found){//if the old user is still around then keep their data unless it's -1
 				temp[itemp]=userSnap[i].getId();
 				if(peopleIDs[j]>=0){
 					tempPeople[itemp]=peopleIDs[j];
@@ -148,7 +148,7 @@ public:
 					tempPeople[itemp]=-2;
 				}
 				itemp++;
-			}else{
+			}else{//we didn't find them
 				temp[itemp]=userSnap[i].getId();
 				tempPeople[itemp]=-2;
 				itemp++;
@@ -162,26 +162,27 @@ public:
 		//Find faces and match them to skeletons
 		Mat ROI;
 		//std::cerr<<"check faces\n";
-		if ( colorFrame.isValid() && userCount>=1){
+		if ( colorFrame.isValid() && userCount>=1){//check to ensure we can go into the face detectio
 			colorcv.data = (uchar*) colorFrame.getData();
 			cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
 			vector< Rect_<int> > faces;
 			//std::cerr<<"entering for\n";
-			for(int j=0;j<userCount;j++){
+			for(int j=0;j<userCount;j++){//check each skeleton for a face using a ROI around the face
 				float x,y;
 				unsigned int i=0;
 				bool match=false;
+				//get teh 2D location from the 3D location of the head
 				userTracker.convertJointCoordinatesToDepth(userSnap[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x,userSnap[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().y,userSnap[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z,&x,&y);
 				x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
 				y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
 				//std::cerr<<"x="<<x<<" y="<<y<<"\n";
-				if(x>50 && y>50 && x<590 && y<430){
+				if(x>50 && y>50 && x<590 && y<430){//check to ensure that the 2D coordinates are within a reasonable range
 
 					cv::Rect face(x-50,y-50,100,100);
 					ROI=colorcv(face);
-					haar_cascade.detectMultiScale(ROI, faces);
+					haar_cascade.detectMultiScale(ROI, faces); //look for faces in the ROI
 
-					for(i=0;i<faces.size();i++){
+					for(i=0;i<faces.size();i++){ //look through the found faces (if any) for one that surrounds the head point
 						//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
 
 						//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
@@ -194,18 +195,19 @@ public:
 					}
 					//std::cerr<<"MATCH WAS "<<match<<"\n";
 					//std::cerr<<"chose face "<<i<<"\n";
-					if(match && peopleIDs[j]<0){//take note of this
+					if(match && peopleIDs[j]<0){//if there is a valid face and they haven't already been identified then put face up for recognition
 						//std::cerr<<"resizing\n";
 						Mat temp = ROI(faces[i]);
 						cv::cvtColor(temp, temp, CV_BGR2GRAY);
 						face.x=25;
 						face.y=50;
 						face.height=180;
-						face.width=180;
+						face.width=180;  //resize face to standard size
 						cv::resize(temp, faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
-						faces_resized[j] = faces_resized[j](face);
+						faces_resized[j] = faces_resized[j](face); //crop face to get rid of more background
+						//resize to standard size
 						cv::resize(faces_resized[j], faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
-						cv::equalizeHist(faces_resized[j],faces_resized[j]);
+						cv::equalizeHist(faces_resized[j],faces_resized[j]);//make colors more defined (just a filter)
 						peopleIDs[j]=-1;//try to identify
 						//std::cerr<<"face put up for identification\n";
 					}
@@ -215,7 +217,7 @@ public:
 		}
 		//std::cerr<<"checking face array\n";
 		//identify faces if possible
-		for(int i = 0; i < IDCount; i++){
+		for(int i = 0; i < IDCount; i++){ //look through all valid images and try to recognize them
 			//std::cerr<<"identifying...\n";
 			if(peopleIDs[i] != -1){
 				continue; //if the value is not -1, don't check
@@ -233,8 +235,8 @@ public:
 			int predictedLabel = -1;
 			double confidence = 0.0;
 			//does the facial recognition prediction based off of the trained eigenface
-			model->predict(faces_resized[i], predictedLabel, confidence);
-			if(predictedLabel!=-1){
+			model->predict(faces_resized[i], predictedLabel, confidence); //check the face
+			if(predictedLabel!=-1){//it has been recognized
 				std::cerr<<predictedLabel<<std::endl;
 				std::cerr<<confidence<<std::endl;
 
