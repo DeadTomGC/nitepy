@@ -39,65 +39,65 @@ public:
 	Tracker(Mat* c=(new Mat( cv::Size( 640, 480 ), CV_8UC3, NULL ))):colorcv(*c){
 
 		//file.open("img.txt");//remove
-
-		IDs=new int[maxUsers];
+		
+		IDs=new int[maxUsers];//initialize arrays and associated values...
 		peopleIDs=new int[maxUsers];
 		IDCount=0;
-		nite::NiTE::initialize();
+		nite::NiTE::initialize(); //initialize nite and openni
 		OpenNI::initialize();
 		
-		if ( device.open( openni::ANY_DEVICE ) != 0 )
+		if ( device.open( openni::ANY_DEVICE ) != 0 ) //open the XtioPRO
 		{
 			printf( "Kinect not found !\n" ); 
 		}
 
 		
-		color.create( device, SENSOR_COLOR );
+		color.create( device, SENSOR_COLOR ); //get the RGB camera
 		color.start();
 
 		VideoMode paramvideo;
-		paramvideo.setResolution( 640, 480 );
+		paramvideo.setResolution( 640, 480 );//setup the RGB capture settings
 		paramvideo.setFps( 30 );
 		paramvideo.setPixelFormat( PIXEL_FORMAT_DEPTH_100_UM );
 		paramvideo.setPixelFormat( PIXEL_FORMAT_RGB888 );
 		color.setVideoMode( paramvideo );
 
-		device.setDepthColorSyncEnabled( false );
+		device.setDepthColorSyncEnabled( false ); //does not sync with depth image (this is not critical and would harm performace)
 
 		stream = &color;
 
 		
-		haar_cascade.load("haarcascade_frontalface_alt.xml");
+		haar_cascade.load("haarcascade_frontalface_alt.xml"); //load face detector xml file
 		
-		createFaceIdentifier("faces.txt");
+		createFaceIdentifier("faces.txt"); //load faces for face recognizers
 
-		niteRc = userTracker.create();
+		niteRc = userTracker.create(); //create skeleton tracker
 		if (niteRc != nite::STATUS_OK)
 		{
 			printf("Couldn't create user tracker\n");
 			
 		}
-		niteRc = userTracker.readFrame(&userTrackerFrame);
+		niteRc = userTracker.readFrame(&userTrackerFrame); //read first frame
 		if (niteRc != nite::STATUS_OK)
 		{
 			printf("Get next frame failed\n");
 			
 		}
-		users = &userTrackerFrame.getUsers();
+		users = &userTrackerFrame.getUsers(); //get user array from frist frame
 		
 	}
 	
-	void loop(){
+	void loop(){//call to get next frame
 		
-		niteRc = userTracker.readFrame(&userTrackerFrame);
+		niteRc = userTracker.readFrame(&userTrackerFrame);//get next frame
 		if (niteRc != nite::STATUS_OK)
 		{
 			printf("Get next frame failed\n");
 			
 		}
 		
-		users = &userTrackerFrame.getUsers();
-		for (int i = 0; i < users->getSize(); ++i)
+		users = &userTrackerFrame.getUsers();//get current users
+		for (int i = 0; i < users->getSize(); ++i)//start tracking them
 		{
 			const nite::UserData& user = (*users)[i];
 			if (user.isNew())
@@ -108,17 +108,17 @@ public:
 		}
 			
 	}
-	void takeSnapShot(){
+	void takeSnapShot(){//take a snapshot so that the faces in it can be processed later
 			int changedIndex;
 			users=&userTrackerFrame.getUsers();
 			userCount = users->getSize();
 			userSnap = new nite::UserData[users->getSize()];
 			for(int i=0;i<userCount;i++){
-				userSnap[i]=(*users)[i];
+				userSnap[i]=(*users)[i]; //copy over skeleton data to snapshot variable
 			}
 			if( device.isValid() ){
 				OpenNI::waitForAnyStream( &stream, 1, &changedIndex );
-				color.readFrame( &colorFrame );
+				color.readFrame( &colorFrame );//grab color frame
 			}
 		
 	}
@@ -126,7 +126,7 @@ public:
 
 
 
-	void detectPeople(){
+	void detectPeople(){//use snapshot data to look for faces
 		static int img=0;
 		//Mat faces_resized[maxUsers];
 		itemp=0;
