@@ -11,6 +11,31 @@
 using namespace cv;
 using namespace openni;
 #define maxUsers 15
+
+
+std::string& trim_right(
+  std::string&       s,
+  const std::string& delimiters = " \f\n\r\t\v" )
+{
+  return s.erase( s.find_last_not_of( delimiters ) + 1 );
+}
+
+std::string& trim_left(
+  std::string&       s,
+  const std::string& delimiters = " \f\n\r\t\v" )
+{
+  return s.erase( 0, s.find_first_not_of( delimiters ) );
+}
+
+std::string& trim(
+  std::string&       s,
+  const std::string& delimiters = " \f\n\r\t\v" )
+{
+  return trim_left( trim_right( s, delimiters ), delimiters );
+}
+
+
+
 class Tracker{
 private:
 	int* IDs; //this is the array of skeleton ID's 
@@ -33,13 +58,30 @@ private:
 	int tempPeople[maxUsers]; //an array for comparing the old and new
 	int itemp; //a temporary counter for temp and tempPeople
 	Mat &colorcv; //image from a frame
-	//std::ofstream file; //remove (look for and uncomment lines with remove to be able to make the changes needed to record training images)
+	std::ofstream file; //remove (look for and uncomment lines with remove to be able to make the changes needed to record training images)
+	std::ifstream name;
+	char tname[30];
+	std::string pname;
+	int label;
+	bool capture;
+	bool record;
 public:
 	int* peopleIDs; //this is the array of ID's for peopl who have been recognized with face recognition (non negative numbers are valid ID's)
 	Tracker(Mat* c=(new Mat( cv::Size( 640, 480 ), CV_8UC3, NULL ))):colorcv(*c){
-
-		//file.open("img.txt");//remove
-		
+		capture = false;
+		record = true;
+		if(capture){
+			file.open("img.txt");//remove
+			name.open("name.txt");
+			name.getline(tname,30);
+			pname = tname;
+			trim(pname);
+			name>>label;
+			name.close();
+		}
+		if(capture){
+			file.open("recognize.txt");//remove
+		}
 		IDs=new int[maxUsers];//initialize arrays and associated values...
 		peopleIDs=new int[maxUsers];
 		IDCount=0;
@@ -225,23 +267,37 @@ public:
 			//std::cerr<<"identifying face"<<i<<"\n";
 			//cv::imshow( "RGB", faces_resized[i] );
 			//cv::waitKey( 1 );
-			//char * filename=new char[30];//remove / change
-			//sprintf(filename,"myTest/chris%d.jpg\0",img); //remove / change
-			//file<<filename<<";1\n";//remove / change
-			//file.flush();//remove / change
-			//imwrite(filename, faces_resized[i]);//remove / change
-			//img++;//remove / change
+			if(capture){
+				char * filename=new char[30];//remove / change
+				sprintf(filename,"tImg/%s%d.jpg\0",pname.c_str(),img); //remove / change
+				file<<filename<<";"<<label<<std::endl;//remove / change
+				file.flush();//remove / change
+				imwrite(filename, faces_resized[i]);//remove / change
+				img++;//remove / change
+				std::cerr<<"wrote image "<<img<<"\n";
+			}
+			
 			//system("pause");
 			int predictedLabel = -1;
 			double confidence = 0.0;
+
 			//does the facial recognition prediction based off of the trained eigenface
-			model->predict(faces_resized[i], predictedLabel, confidence); //check the face
+			if(capture == false){
+				model->predict(faces_resized[i], predictedLabel, confidence); //check the face
+			}
+			if(record){
+				file<<predictedLabel<<" "<<confidence<<"\n";
+				predictedLabel = -1;
+			}
 			if(predictedLabel!=-1){//it has been recognized
 				std::cerr<<predictedLabel<<std::endl;
 				std::cerr<<confidence<<std::endl;
 
 			}
 			peopleIDs[i] = predictedLabel; //label for person is placed in peopleIDs, -1 if unrecognized
+			if(capture || record){
+				peopleIDs[i]=-2;
+			}
 		}
 
 		delete[] userSnap;
