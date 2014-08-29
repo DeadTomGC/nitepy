@@ -11,135 +11,94 @@
 using namespace cv;
 using namespace openni;
 #define maxUsers 15
-
-
-std::string& trim_right(
-  std::string&       s,
-  const std::string& delimiters = " \f\n\r\t\v" )
-{
-  return s.erase( s.find_last_not_of( delimiters ) + 1 );
-}
-
-std::string& trim_left(
-  std::string&       s,
-  const std::string& delimiters = " \f\n\r\t\v" )
-{
-  return s.erase( 0, s.find_first_not_of( delimiters ) );
-}
-
-std::string& trim(
-  std::string&       s,
-  const std::string& delimiters = " \f\n\r\t\v" )
-{
-  return trim_left( trim_right( s, delimiters ), delimiters );
-}
-
-
-
 class Tracker{
 private:
-	int* IDs; //this is the array of skeleton ID's 
-	int IDCount; //number of ID's that are valid
-	bool running;//if it's still running
-	Ptr<FaceRecognizer> model; //pointer to the face Recognizing model
-	Device device;  //the Device object for the Xtion PRO
-	VideoStream color; //our RGB stream
-	VideoStream* stream; 
-	CascadeClassifier haar_cascade;//Our face detector
-	nite::UserTracker userTracker;//our skeleton tracker (from NITE)
-	nite::Status niteRc; //a variable for storing errors (used in many places)
-	nite::UserTrackerFrameRef userTrackerFrame;//a single skeleton data frame
-	const nite::Array<nite::UserData>* users;//all the users skeletons in one array
-	nite::UserData* userSnap;// a snapshot of where the skeletons are to be used in face recognition
-	int userCount;//number of users at that time
-	VideoFrameRef colorFrame;  //a single color frame
-	Mat faces_resized[maxUsers]; //the faces that will be recognized by the recognizer after being detected
-	int temp[maxUsers]; //an array used for comparing the old and new skeletons and which have been identified
-	int tempPeople[maxUsers]; //an array for comparing the old and new
-	int itemp; //a temporary counter for temp and tempPeople
-	Mat &colorcv; //image from a frame
-	std::ofstream file; //remove (look for and uncomment lines with remove to be able to make the changes needed to record training images)
-	std::ifstream name;
-	char tname[30];
-	std::string pname;
-	int label;
-	bool capture;
-	bool record;
+	int* IDs;
+	int IDCount;
+	bool running;
+	Ptr<FaceRecognizer> model;
+	Device device;
+	VideoStream color;
+	VideoStream* stream;
+	CascadeClassifier haar_cascade;
+	nite::UserTracker userTracker;
+	nite::Status niteRc;
+	nite::UserTrackerFrameRef userTrackerFrame;
+	const nite::Array<nite::UserData>* users;
+	//const nite::Array<nite::UserData>* userSnap;
+	nite::UserData* userSnap;
+	int userCount;
+	VideoFrameRef colorFrame;
+	Mat faces_resized[maxUsers];
+	int temp[maxUsers];
+	int tempPeople[maxUsers];
+	int itemp;
+	Mat &colorcv;
+	//std::ofstream file; //remove
 public:
-	int* peopleIDs; //this is the array of ID's for peopl who have been recognized with face recognition (non negative numbers are valid ID's)
+	int* peopleIDs;
 	Tracker(Mat* c=(new Mat( cv::Size( 640, 480 ), CV_8UC3, NULL ))):colorcv(*c){
-		capture = false;
-		record = true;
-		if(capture){
-			file.open("img.txt");//remove
-			name.open("name.txt");
-			name.getline(tname,30);
-			pname = tname;
-			trim(pname);
-			name>>label;
-			name.close();
-		}
-		if(capture){
-			file.open("recognize.txt");//remove
-		}
-		IDs=new int[maxUsers];//initialize arrays and associated values...
+
+		//file.open("img.txt");//remove
+
+		IDs=new int[maxUsers];
 		peopleIDs=new int[maxUsers];
 		IDCount=0;
-		nite::NiTE::initialize(); //initialize nite and openni
-		OpenNI::initialize();
+		nite::NiTE::initialize();
+		/*OpenNI::initialize();
 		
-		if ( device.open( openni::ANY_DEVICE ) != 0 ) //open the XtioPRO
+		if ( device.open( openni::ANY_DEVICE ) != 0 )
 		{
 			printf( "Kinect not found !\n" ); 
 		}
 
 		
-		color.create( device, SENSOR_COLOR ); //get the RGB camera
+		color.create( device, SENSOR_COLOR );
 		color.start();
 
 		VideoMode paramvideo;
-		paramvideo.setResolution( 640, 480 );//setup the RGB capture settings
+		paramvideo.setResolution( 640, 480 );
 		paramvideo.setFps( 30 );
 		paramvideo.setPixelFormat( PIXEL_FORMAT_DEPTH_100_UM );
 		paramvideo.setPixelFormat( PIXEL_FORMAT_RGB888 );
 		color.setVideoMode( paramvideo );
 
-		device.setDepthColorSyncEnabled( false ); //does not sync with depth image (this is not critical and would harm performace)
+		device.setDepthColorSyncEnabled( false );
 
 		stream = &color;
 
 		
-		haar_cascade.load("haarcascade_frontalface_alt.xml"); //load face detector xml file
+		haar_cascade.load("haarcascade_frontalface_alt.xml");
 		
-		createFaceIdentifier("faces.txt"); //load faces for face recognizers
-
-		niteRc = userTracker.create(); //create skeleton tracker
+		createFaceIdentifier("faces.txt");
+		*/
+		niteRc = userTracker.create();
 		if (niteRc != nite::STATUS_OK)
 		{
 			printf("Couldn't create user tracker\n");
 			
 		}
-		niteRc = userTracker.readFrame(&userTrackerFrame); //read first frame
+		niteRc = userTracker.readFrame(&userTrackerFrame);
 		if (niteRc != nite::STATUS_OK)
 		{
 			printf("Get next frame failed\n");
 			
 		}
-		users = &userTrackerFrame.getUsers(); //get user array from frist frame
+		users = &userTrackerFrame.getUsers();
 		
 	}
 	
-	void loop(){//call to get next frame
+	void loop(){
 		
-		niteRc = userTracker.readFrame(&userTrackerFrame);//get next frame
+		niteRc = userTracker.readFrame(&userTrackerFrame);
 		if (niteRc != nite::STATUS_OK)
 		{
 			printf("Get next frame failed\n");
 			
 		}
 		
-		users = &userTrackerFrame.getUsers();//get current users
-		for (int i = 0; i < users->getSize(); ++i)//start tracking them
+		users = &userTrackerFrame.getUsers();
+		for (int i = 0; i < users->getSize(); ++i)
 		{
 			const nite::UserData& user = (*users)[i];
 			if (user.isNew())
@@ -150,17 +109,17 @@ public:
 		}
 			
 	}
-	void takeSnapShot(){//take a snapshot so that the faces in it can be processed later
+	void takeSnapShot(){
 			int changedIndex;
 			users=&userTrackerFrame.getUsers();
 			userCount = users->getSize();
 			userSnap = new nite::UserData[users->getSize()];
 			for(int i=0;i<userCount;i++){
-				userSnap[i]=(*users)[i]; //copy over skeleton data to snapshot variable
+				userSnap[i]=(*users)[i];
 			}
 			if( device.isValid() ){
 				OpenNI::waitForAnyStream( &stream, 1, &changedIndex );
-				color.readFrame( &colorFrame );//grab color frame
+				color.readFrame( &colorFrame );
 			}
 		
 	}
@@ -168,7 +127,7 @@ public:
 
 
 
-	void detectPeople(){//use snapshot data to look for faces
+	void detectPeople(){
 		static int img=0;
 		//Mat faces_resized[maxUsers];
 		itemp=0;
@@ -182,7 +141,7 @@ public:
 					break;
 				}
 			}
-			if(found){//if the old user is still around then keep their data unless it's -1
+			if(found){
 				temp[itemp]=userSnap[i].getId();
 				if(peopleIDs[j]>=0){
 					tempPeople[itemp]=peopleIDs[j];
@@ -190,7 +149,7 @@ public:
 					tempPeople[itemp]=-2;
 				}
 				itemp++;
-			}else{//we didn't find them
+			}else{
 				temp[itemp]=userSnap[i].getId();
 				tempPeople[itemp]=-2;
 				itemp++;
@@ -204,27 +163,26 @@ public:
 		//Find faces and match them to skeletons
 		Mat ROI;
 		//std::cerr<<"check faces\n";
-		if ( colorFrame.isValid() && userCount>=1){//check to ensure we can go into the face detectio
+		if ( colorFrame.isValid() && userCount>=1){
 			colorcv.data = (uchar*) colorFrame.getData();
 			cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
 			vector< Rect_<int> > faces;
 			//std::cerr<<"entering for\n";
-			for(int j=0;j<userCount;j++){//check each skeleton for a face using a ROI around the face
+			for(int j=0;j<userCount;j++){
 				float x,y;
 				unsigned int i=0;
 				bool match=false;
-				//get teh 2D location from the 3D location of the head
 				userTracker.convertJointCoordinatesToDepth(userSnap[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x,userSnap[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().y,userSnap[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z,&x,&y);
 				x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
 				y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
 				//std::cerr<<"x="<<x<<" y="<<y<<"\n";
-				if(x>50 && y>50 && x<590 && y<430){//check to ensure that the 2D coordinates are within a reasonable range
+				if(x>50 && y>50 && x<590 && y<430){
 
 					cv::Rect face(x-50,y-50,100,100);
 					ROI=colorcv(face);
-					haar_cascade.detectMultiScale(ROI, faces); //look for faces in the ROI
+					haar_cascade.detectMultiScale(ROI, faces);
 
-					for(i=0;i<faces.size();i++){ //look through the found faces (if any) for one that surrounds the head point
+					for(i=0;i<faces.size();i++){
 						//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
 
 						//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
@@ -237,19 +195,23 @@ public:
 					}
 					//std::cerr<<"MATCH WAS "<<match<<"\n";
 					//std::cerr<<"chose face "<<i<<"\n";
-					if(match && peopleIDs[j]<0){//if there is a valid face and they haven't already been identified then put face up for recognition
+					if(match && peopleIDs[j]<0){//take note of this
 						//std::cerr<<"resizing\n";
+						rectangle(ROI,faces[i],Scalar( 255,0, 255 ));
+						char * filename=new char[30];//remove / change
+						sprintf(filename,"myTest/thing.jpg\0"); //remove / change
+						imwrite(filename, ROI);//remove / change
+
 						Mat temp = ROI(faces[i]);
 						cv::cvtColor(temp, temp, CV_BGR2GRAY);
 						face.x=25;
 						face.y=50;
 						face.height=180;
-						face.width=180;  //resize face to standard size
+						face.width=180;
 						cv::resize(temp, faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
-						faces_resized[j] = faces_resized[j](face); //crop face to get rid of more background
-						//resize to standard size
+						faces_resized[j] = faces_resized[j](face);
 						cv::resize(faces_resized[j], faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
-						cv::equalizeHist(faces_resized[j],faces_resized[j]);//make colors more defined (just a filter)
+						cv::equalizeHist(faces_resized[j],faces_resized[j]);
 						peopleIDs[j]=-1;//try to identify
 						//std::cerr<<"face put up for identification\n";
 					}
@@ -259,7 +221,7 @@ public:
 		}
 		//std::cerr<<"checking face array\n";
 		//identify faces if possible
-		for(int i = 0; i < IDCount; i++){ //look through all valid images and try to recognize them
+		for(int i = 0; i < IDCount; i++){
 			//std::cerr<<"identifying...\n";
 			if(peopleIDs[i] != -1){
 				continue; //if the value is not -1, don't check
@@ -267,37 +229,23 @@ public:
 			//std::cerr<<"identifying face"<<i<<"\n";
 			//cv::imshow( "RGB", faces_resized[i] );
 			//cv::waitKey( 1 );
-			if(capture){
-				char * filename=new char[30];//remove / change
-				sprintf(filename,"tImg/%s%d.jpg\0",pname.c_str(),img); //remove / change
-				file<<filename<<";"<<label<<std::endl;//remove / change
-				file.flush();//remove / change
-				imwrite(filename, faces_resized[i]);//remove / change
-				img++;//remove / change
-				std::cerr<<"wrote image "<<img<<"\n";
-			}
-			
+			//char * filename=new char[30];//remove / change
+			//sprintf(filename,"myTest/chris%d.jpg\0",img); //remove / change
+			//file<<filename<<";1\n";//remove / change
+			//file.flush();//remove / change
+			//imwrite(filename, faces_resized[i]);//remove / change
+			//img++;//remove / change
 			//system("pause");
 			int predictedLabel = -1;
 			double confidence = 0.0;
-
 			//does the facial recognition prediction based off of the trained eigenface
-			if(capture == false){
-				model->predict(faces_resized[i], predictedLabel, confidence); //check the face
-			}
-			if(record){
-				file<<predictedLabel<<" "<<confidence<<"\n";
-				predictedLabel = -1;
-			}
-			if(predictedLabel!=-1){//it has been recognized
+			model->predict(faces_resized[i], predictedLabel, confidence);
+			if(predictedLabel!=-1){
 				std::cerr<<predictedLabel<<std::endl;
 				std::cerr<<confidence<<std::endl;
 
 			}
 			peopleIDs[i] = predictedLabel; //label for person is placed in peopleIDs, -1 if unrecognized
-			if(capture || record){
-				peopleIDs[i]=-2;
-			}
 		}
 
 		delete[] userSnap;
@@ -374,6 +322,9 @@ public:
 	float getUserSkeletonHeadZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z;
 	}
+	float getUserSkeletonNeckConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_NECK).getPositionConfidence();
+	}
 	float getUserSkeletonNeckX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_NECK).getPosition().x;
 	}
@@ -382,6 +333,9 @@ public:
 	}
 	float getUserSkeletonNeckZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_NECK).getPosition().z;
+	}
+	float getUserSkeletonL_ShConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPositionConfidence();
 	}
 	float getUserSkeletonL_ShX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().x;
@@ -392,6 +346,9 @@ public:
 	float getUserSkeletonL_ShZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().z;
 	}
+	float getUserSkeletonR_ShConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPositionConfidence();
+	}
 	float getUserSkeletonR_ShX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPosition().x;
 	}
@@ -400,6 +357,9 @@ public:
 	}
 	float getUserSkeletonR_ShZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPosition().z;
+	}
+	float getUserSkeletonL_ElbowConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_ELBOW).getPositionConfidence();
 	}
 	float getUserSkeletonL_ElbowX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_ELBOW).getPosition().x;
@@ -410,6 +370,9 @@ public:
 	float getUserSkeletonL_ElbowZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_ELBOW).getPosition().z;
 	}
+	float getUserSkeletonR_ElbowConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_ELBOW).getPositionConfidence();
+	}
 	float getUserSkeletonR_ElbowX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_ELBOW).getPosition().x;
 	}
@@ -418,6 +381,9 @@ public:
 	}
 	float getUserSkeletonR_ElbowZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_ELBOW).getPosition().z;
+	}
+	float getUserSkeletonL_HandConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_HAND).getPositionConfidence();
 	}
 	float getUserSkeletonL_HandX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_HAND).getPosition().x;
@@ -428,6 +394,9 @@ public:
 	float getUserSkeletonL_HandZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_HAND).getPosition().z;
 	}
+	float getUserSkeletonR_HandConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_HAND).getPositionConfidence();
+	}
 	float getUserSkeletonR_HandX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_HAND).getPosition().x;
 	}
@@ -436,6 +405,9 @@ public:
 	}
 	float getUserSkeletonR_HandZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_HAND).getPosition().z;
+	}
+	float getUserSkeletonTorsoConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_TORSO).getPositionConfidence();
 	}
 	float getUserSkeletonTorsoX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_TORSO).getPosition().x;
@@ -446,6 +418,9 @@ public:
 	float getUserSkeletonTorsoZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_TORSO).getPosition().z;
 	}
+	float getUserSkeletonL_HipConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_HIP).getPositionConfidence();
+	}
 	float getUserSkeletonL_HipX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_HIP).getPosition().x;
 	}
@@ -454,6 +429,9 @@ public:
 	}
 	float getUserSkeletonL_HipZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_HIP).getPosition().z;
+	}
+	float getUserSkeletonR_HipConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPositionConfidence();
 	}
 	float getUserSkeletonR_HipX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().x;
@@ -464,6 +442,9 @@ public:
 	float getUserSkeletonR_HipZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().z;
 	}
+	float getUserSkeletonL_KneeConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_KNEE).getPositionConfidence();
+	}
 	float getUserSkeletonL_KneeX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_KNEE).getPosition().x;
 	}
@@ -472,6 +453,9 @@ public:
 	}
 	float getUserSkeletonL_KneeZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_KNEE).getPosition().z;
+	}
+	float getUserSkeletonR_KneeConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_KNEE).getPositionConfidence();
 	}
 	float getUserSkeletonR_KneeX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_KNEE).getPosition().x;
@@ -482,6 +466,9 @@ public:
 	float getUserSkeletonR_KneeZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_KNEE).getPosition().z;
 	}
+	float getUserSkeletonL_FootConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_FOOT).getPositionConfidence();
+	}
 	float getUserSkeletonL_FootX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_FOOT).getPosition().x;
 	}
@@ -490,6 +477,9 @@ public:
 	}
 	float getUserSkeletonL_FootZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_FOOT).getPosition().z;
+	}
+	float getUserSkeletonR_FootConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_FOOT).getPositionConfidence();
 	}
 	float getUserSkeletonR_FootX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_FOOT).getPosition().x;
