@@ -362,9 +362,9 @@ public:
 	int getUserID(int i){
 		return (*users)[i].getId();
 	}
-	float getUserSkeletonHeadConf(int i){
-		return (*users)[i].getSkeleton().getJoint(nite::JOINT_HEAD).getPositionConfidence();
-	}
+		float getUserSkeletonHeadConf(int i){
+			return (*users)[i].getSkeleton().getJoint(nite::JOINT_HEAD).getPositionConfidence();
+		}
 	float getUserSkeletonHeadX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x;
 	}
@@ -373,6 +373,9 @@ public:
 	}
 	float getUserSkeletonHeadZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z;
+	}
+	float getUserSkeletonNeckConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_NECK).getPositionConfidence();
 	}
 	float getUserSkeletonNeckX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_NECK).getPosition().x;
@@ -383,6 +386,9 @@ public:
 	float getUserSkeletonNeckZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_NECK).getPosition().z;
 	}
+	float getUserSkeletonL_ShConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPositionConfidence();
+	}
 	float getUserSkeletonL_ShX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().x;
 	}
@@ -391,6 +397,9 @@ public:
 	}
 	float getUserSkeletonL_ShZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().z;
+	}
+	float getUserSkeletonR_ShConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPositionConfidence();
 	}
 	float getUserSkeletonR_ShX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPosition().x;
@@ -401,6 +410,9 @@ public:
 	float getUserSkeletonR_ShZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPosition().z;
 	}
+	float getUserSkeletonL_ElbowConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_ELBOW).getPositionConfidence();
+	}
 	float getUserSkeletonL_ElbowX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_ELBOW).getPosition().x;
 	}
@@ -409,6 +421,9 @@ public:
 	}
 	float getUserSkeletonL_ElbowZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_ELBOW).getPosition().z;
+	}
+	float getUserSkeletonR_ElbowConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_ELBOW).getPositionConfidence();
 	}
 	float getUserSkeletonR_ElbowX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_ELBOW).getPosition().x;
@@ -419,6 +434,9 @@ public:
 	float getUserSkeletonR_ElbowZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_ELBOW).getPosition().z;
 	}
+	float getUserSkeletonL_HandConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_HAND).getPositionConfidence();
+	}
 	float getUserSkeletonL_HandX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_HAND).getPosition().x;
 	}
@@ -427,6 +445,9 @@ public:
 	}
 	float getUserSkeletonL_HandZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_HAND).getPosition().z;
+	}
+	float getUserSkeletonR_HandConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_HAND).getPositionConfidence();
 	}
 	float getUserSkeletonR_HandX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_HAND).getPosition().x;
@@ -437,6 +458,9 @@ public:
 	float getUserSkeletonR_HandZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_HAND).getPosition().z;
 	}
+	float getUserSkeletonTorsoConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_TORSO).getPositionConfidence();
+	}
 	float getUserSkeletonTorsoX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_TORSO).getPosition().x;
 	}
@@ -445,6 +469,9 @@ public:
 	}
 	float getUserSkeletonTorsoZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_TORSO).getPosition().z;
+	}
+	float getUserSkeletonL_HipConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_HIP).getPositionConfidence();
 	}
 	float getUserSkeletonL_HipX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_HIP).getPosition().x;
@@ -455,6 +482,9 @@ public:
 	float getUserSkeletonL_HipZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_HIP).getPosition().z;
 	}
+	float getUserSkeletonR_HipConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPositionConfidence();
+	}
 	float getUserSkeletonR_HipX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().x;
 	}
@@ -463,6 +493,9 @@ public:
 	}
 	float getUserSkeletonR_HipZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().z;
+	}
+	float getUserSkeletonL_KneeConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_KNEE).getPositionConfidence();
 	}
 	float getUserSkeletonL_KneeX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_KNEE).getPosition().x;
@@ -473,6 +506,9 @@ public:
 	float getUserSkeletonL_KneeZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_KNEE).getPosition().z;
 	}
+	float getUserSkeletonR_KneeConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_KNEE).getPositionConfidence();
+	}
 	float getUserSkeletonR_KneeX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_KNEE).getPosition().x;
 	}
@@ -482,6 +518,9 @@ public:
 	float getUserSkeletonR_KneeZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_KNEE).getPosition().z;
 	}
+	float getUserSkeletonL_FootConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_FOOT).getPositionConfidence();
+	}
 	float getUserSkeletonL_FootX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_FOOT).getPosition().x;
 	}
@@ -490,6 +529,9 @@ public:
 	}
 	float getUserSkeletonL_FootZ(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_LEFT_FOOT).getPosition().z;
+	}
+	float getUserSkeletonR_FootConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_FOOT).getPositionConfidence();
 	}
 	float getUserSkeletonR_FootX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_RIGHT_FOOT).getPosition().x;
