@@ -68,8 +68,8 @@ private:
 public:
 	int* peopleIDs; //this is the array of ID's for peopl who have been recognized with face recognition (non negative numbers are valid ID's)
 	Tracker(Mat* c=(new Mat( cv::Size( 640, 480 ), CV_8UC3, NULL ))):colorcv(*c){
-		capture = false;
-		record = true;
+		capture = true;
+		record = false;
 		if(capture){
 			file.open("img.txt");//remove
 			name.open("name.txt");
