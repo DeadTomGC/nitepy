@@ -10,6 +10,7 @@
 
 using namespace cv;
 using namespace openni;
+
 #define maxUsers 15
 
 
@@ -63,6 +64,7 @@ private:
 	char tname[30];
 	std::string pname;
 	int label;
+	float xtl,ytl,xbr,ybr; //the bounding box for the shirt of the user
 	bool capture;
 	bool record;
 public:
@@ -92,7 +94,7 @@ public:
 		{
 			printf( "Kinect not found !\n" ); 
 		}
-
+		
 		
 		color.create( device, SENSOR_COLOR ); //get the RGB camera
 		color.start();
@@ -126,6 +128,7 @@ public:
 			
 		}
 		users = &userTrackerFrame.getUsers(); //get user array from frist frame
+		
 		
 	}
 	
@@ -165,7 +168,74 @@ public:
 		
 	}
 
+	void* analyzeShirt(int index,int segX=10,int segY=12){
+		
 
+		if ( colorFrame.isValid() && userCount>index){
+			colorcv.data = (uchar*) colorFrame.getData();
+			cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
+			if(userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPositionConfidence()>0.5
+				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPositionConfidence()>0.5
+				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_HIP).getPositionConfidence()>0.5
+				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPositionConfidence()>0.5){
+				
+				userTracker.convertJointCoordinatesToDepth(userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().x,userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().y,userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().z,&xtl,&ytl);
+				xtl*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
+				ytl*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
+				userTracker.convertJointCoordinatesToDepth(userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().x,userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().y,userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().z,&xbr,&ybr);
+				xbr*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
+				ybr*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
+				int x,y;
+				if(ybr<ytl)
+					return NULL;
+				char* shirt = new char[3*segX*segY];
+
+				int moveX = (xbr - xtl)/segX;
+				int moveY = (ybr - ytl)/segY;
+				for(y = ytl;y<ybr-moveY;y+=ybr){
+
+				}
+
+			}
+		}else{
+			return NULL;
+		}
+
+
+
+	}
+	int getShirt(int index){
+		if ( colorFrame.isValid() && userCount>index){
+			colorcv.data = (uchar*) colorFrame.getData();
+			cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
+			if(userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPositionConfidence()>0.5
+				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPositionConfidence()>0.5
+				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_HIP).getPositionConfidence()>0.5
+				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPositionConfidence()>0.5){
+				
+				userTracker.convertJointCoordinatesToDepth(userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().x,userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().y,userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().z,&xtl,&ytl);
+				xtl*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
+				ytl*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
+				userTracker.convertJointCoordinatesToDepth(userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().x,userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().y,userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().z,&xbr,&ybr);
+				xbr*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
+				ybr*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
+				return 0;
+			}
+		}
+		return -1;
+	}
+	int getShirtSizeX(){
+
+		return (xbr-xtl);
+	}
+	int getShirtSizeY(){
+
+		return (ybr - ytl);
+	}
+	int getColor(int x,int y){
+
+		return colorcv.at<int>(xtl+x,ytl+y);
+	}
 
 
 	void detectPeople(){//use snapshot data to look for faces

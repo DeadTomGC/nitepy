@@ -3,7 +3,11 @@
  
  
 extern "C" { //these are all C wrappers to C++ code so that these methods may be used in python
-    trackerdll_api Tracker* Tracker_new(){ return new Tracker(); } 
+    trackerdll_api Tracker* Tracker_new(){ return new Tracker(); }
+	trackerdll_api int getShirt(Tracker* tracker,int index){ return tracker->getShirt(index);}
+	trackerdll_api int getShirtSizeX(Tracker* tracker){ return tracker->getShirtSizeX();}
+	trackerdll_api int getShirtSizeY(Tracker* tracker){ return tracker->getShirtSizeY();}
+	trackerdll_api int getColor(Tracker* tracker,int x,int y){ return tracker->getColor(x,y);}
     trackerdll_api void loop(Tracker* tracker){ tracker->loop();}
     trackerdll_api int getUsersCount(Tracker* tracker){ return tracker->getUsersCount();}
     trackerdll_api bool isUserTracked(Tracker* tracker,int i){ return tracker->isUserTracked(i);}
