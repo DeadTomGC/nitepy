@@ -70,7 +70,7 @@ private:
 public:
 	int* peopleIDs; //this is the array of ID's for peopl who have been recognized with face recognition (non negative numbers are valid ID's)
 	Tracker(Mat* c=(new Mat( cv::Size( 640, 480 ), CV_8UC3, NULL ))):colorcv(*c){
-		capture = true;
+		capture = false;
 		record = false;
 		if(capture){
 			file.open("img.txt");//remove
@@ -233,8 +233,13 @@ public:
 		return (ybr - ytl);
 	}
 	int getColor(int x,int y){
-
-		return colorcv.at<int>(xtl+x,ytl+y);
+		if((int)xtl+x<640 && (int)xtl+x>0 && (int)ytl+y<480 && (int)ytl+y>0){
+			//std::cout<<(int)xtl+x<<" "<<(int)ytl+y<<std::endl;
+			return colorcv.at<int>((int)ytl+y,(int)xtl+x);
+			
+		}else{
+			return -1;
+		}
 	}
 
 
