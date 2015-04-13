@@ -239,7 +239,11 @@ public:
 			//std::cout<<(int)xtl+x<<" "<<(int)ytl+y<<std::endl;
 			return colorcv.at<int>((int)ytl+y,(int)xtl+x);
 			
-		}else{
+		}else if(xtl>xbr && (int)xtl-x<640 && (int)xtl-x>0 && (int)ytl+y<480 && (int)ytl+y>0){
+			//std::cout<<(int)xtl+x<<" "<<(int)ytl+y<<std::endl;
+			return colorcv.at<int>((int)ytl+y,(int)xtl-x);
+			
+		}{
 			return -1;
 		}
 	}
