@@ -47,6 +47,7 @@ private:
 	VideoStream color; //our RGB stream
 	VideoStream* stream; 
 	CascadeClassifier haar_cascade;//Our face detector
+	CascadeClassifier haar_cascade_side;//Our Side face detector
 	nite::UserTracker userTracker;//our skeleton tracker (from NITE)
 	nite::Status niteRc; //a variable for storing errors (used in many places)
 	nite::UserTrackerFrameRef userTrackerFrame;//a single skeleton data frame
@@ -112,7 +113,8 @@ public:
 
 		
 		haar_cascade.load("haarcascade_frontalface_alt.xml"); //load face detector xml file
-		
+		haar_cascade_side.load("haar_face_profile.xml"); //load face detector xml file
+
 		createFaceIdentifier("faces.txt"); //load faces for face recognizers
 
 		niteRc = userTracker.create(); //create skeleton tracker
@@ -278,17 +280,20 @@ public:
 		IDCount=userCount;
 		//Find faces and match them to skeletons
 		Mat ROI;
+		Mat ROIflip;
 		//std::cerr<<"check faces\n";
-		if ( colorFrame.isValid() && userCount>=1){//check to ensure we can go into the face detectio
+		if ( colorFrame.isValid() && userCount>=1){//check to ensure we can go into the face detection
 			colorcv.data = (uchar*) colorFrame.getData();
 			cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
 			vector< Rect_<int> > faces;
+			vector< Rect_<int> > faces_side1;
+			vector< Rect_<int> > faces_side2;
 			//std::cerr<<"entering for\n";
 			for(int j=0;j<userCount;j++){//check each skeleton for a face using a ROI around the face
 				float x,y;
 				unsigned int i=0;
 				bool match=false;
-				//get teh 2D location from the 3D location of the head
+				//get the 2D location from the 3D location of the head
 				userTracker.convertJointCoordinatesToDepth(userSnap[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x,userSnap[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().y,userSnap[j].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().z,&x,&y);
 				x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
 				y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
@@ -298,6 +303,10 @@ public:
 					cv::Rect face(x-50,y-50,100,100);
 					ROI=colorcv(face);
 					haar_cascade.detectMultiScale(ROI, faces); //look for faces in the ROI
+
+					haar_cascade_side.detectMultiScale(ROI, faces_side1);//look for profiles
+					flip(ROI,ROIflip,1);
+					haar_cascade_side.detectMultiScale(ROIflip, faces_side2);//look for flipped profiles
 
 					for(i=0;i<faces.size();i++){ //look through the found faces (if any) for one that surrounds the head point
 						//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
@@ -310,6 +319,7 @@ public:
 							}
 						}
 					}
+					
 					//std::cerr<<"MATCH WAS "<<match<<"\n";
 					//std::cerr<<"chose face "<<i<<"\n";
 					if(match && peopleIDs[j]<0){//if there is a valid face and they haven't already been identified then put face up for recognition
@@ -329,6 +339,63 @@ public:
 						//std::cerr<<"face put up for identification\n";
 					}
 
+					for(i=0;i<faces_side1.size();i++){ //look through the found faces (if any) for one that surrounds the head point
+						//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
+
+						//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
+						if(50>faces_side1[i].x && 50<faces_side1[i].x+faces_side1[i].width){
+							if(50>faces_side1[i].y && 50<faces_side1[i].y+faces_side1[i].height){
+								match = true;//face is found for skeleton j
+								break;
+							}
+						}
+					}
+					//
+					if(match && peopleIDs[j]<0){//if there is a valid face and they haven't already been identified then put face up for recognition
+						//std::cerr<<"resizing\n";
+						Mat temp = ROI(faces_side1[i]);
+						cv::cvtColor(temp, temp, CV_BGR2GRAY);
+						face.x=25;
+						face.y=50;
+						face.height=180;
+						face.width=180;  //resize face to standard size
+						cv::resize(temp, faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+						faces_resized[j] = faces_resized[j](face); //crop face to get rid of more background
+						//resize to standard size
+						cv::resize(faces_resized[j], faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+						cv::equalizeHist(faces_resized[j],faces_resized[j]);//make colors more defined (just a filter)
+						peopleIDs[j]=-1;//try to identify
+						//std::cerr<<"face put up for identification\n";
+					}
+
+					for(i=0;i<faces_side2.size();i++){ //look through the found faces (if any) for one that surrounds the head point
+						//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
+
+						//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
+						if(50>faces_side2[i].x && 50<faces_side2[i].x+faces_side2[i].width){
+							if(50>faces_side2[i].y && 50<faces_side2[i].y+faces_side2[i].height){
+								match = true;//face is found for skeleton j
+								break;
+							}
+						}
+					}
+					//
+					if(match && peopleIDs[j]<0){//if there is a valid face and they haven't already been identified then put face up for recognition
+						//std::cerr<<"resizing\n";
+						Mat temp = ROIflip(faces_side2[i]);
+						cv::cvtColor(temp, temp, CV_BGR2GRAY);
+						face.x=25;
+						face.y=50;
+						face.height=180;
+						face.width=180;  //resize face to standard size
+						cv::resize(temp, faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+						faces_resized[j] = faces_resized[j](face); //crop face to get rid of more background
+						//resize to standard size
+						cv::resize(faces_resized[j], faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+						cv::equalizeHist(faces_resized[j],faces_resized[j]);//make colors more defined (just a filter)
+						peopleIDs[j]=-1;//try to identify
+						//std::cerr<<"face put up for identification\n";
+					}
 				}
 			}
 		}
