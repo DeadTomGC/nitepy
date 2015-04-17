@@ -15,24 +15,24 @@ using namespace openni;
 
 
 std::string& trim_right(
-  std::string&       s,
-  const std::string& delimiters = " \f\n\r\t\v" )
+	std::string&       s,
+	const std::string& delimiters = " \f\n\r\t\v" )
 {
-  return s.erase( s.find_last_not_of( delimiters ) + 1 );
+	return s.erase( s.find_last_not_of( delimiters ) + 1 );
 }
 
 std::string& trim_left(
-  std::string&       s,
-  const std::string& delimiters = " \f\n\r\t\v" )
+	std::string&       s,
+	const std::string& delimiters = " \f\n\r\t\v" )
 {
-  return s.erase( 0, s.find_first_not_of( delimiters ) );
+	return s.erase( 0, s.find_first_not_of( delimiters ) );
 }
 
 std::string& trim(
-  std::string&       s,
-  const std::string& delimiters = " \f\n\r\t\v" )
+	std::string&       s,
+	const std::string& delimiters = " \f\n\r\t\v" )
 {
-  return trim_left( trim_right( s, delimiters ), delimiters );
+	return trim_left( trim_right( s, delimiters ), delimiters );
 }
 
 
@@ -90,13 +90,13 @@ public:
 		IDCount=0;
 		nite::NiTE::initialize(); //initialize nite and openni
 		OpenNI::initialize();
-		
+
 		if ( device.open( openni::ANY_DEVICE ) != 0 ) //open the XtioPRO
 		{
 			printf( "Kinect not found !\n" ); 
 		}
-		
-		
+
+
 		color.create( device, SENSOR_COLOR ); //get the RGB camera
 		color.start();
 
@@ -111,7 +111,7 @@ public:
 
 		stream = &color;
 
-		
+
 		haar_cascade.load("haarcascade_frontalface_alt.xml"); //load face detector xml file
 		haar_cascade_side.load("haar_face_profile.xml"); //load face detector xml file
 
@@ -121,28 +121,28 @@ public:
 		if (niteRc != nite::STATUS_OK)
 		{
 			printf("Couldn't create user tracker\n");
-			
+
 		}
 		niteRc = userTracker.readFrame(&userTrackerFrame); //read first frame
 		if (niteRc != nite::STATUS_OK)
 		{
 			printf("Get next frame failed\n");
-			
+
 		}
 		users = &userTrackerFrame.getUsers(); //get user array from frist frame
-		
-		
+
+
 	}
-	
+
 	void loop(){//call to get next frame
-		
+
 		niteRc = userTracker.readFrame(&userTrackerFrame);//get next frame
 		if (niteRc != nite::STATUS_OK)
 		{
 			printf("Get next frame failed\n");
-			
+
 		}
-		
+
 		users = &userTrackerFrame.getUsers();//get current users
 		for (int i = 0; i < users->getSize(); ++i)//start tracking them
 		{
@@ -151,27 +151,27 @@ public:
 			{
 				userTracker.startSkeletonTracking(user.getId());
 			}
-			
+
 		}
-			
+
 	}
 	void takeSnapShot(){//take a snapshot so that the faces in it can be processed later
-			int changedIndex;
-			users=&userTrackerFrame.getUsers();
-			userCount = users->getSize();
-			userSnap = new nite::UserData[users->getSize()];
-			for(int i=0;i<userCount;i++){
-				userSnap[i]=(*users)[i]; //copy over skeleton data to snapshot variable
-			}
-			if( device.isValid() ){
-				OpenNI::waitForAnyStream( &stream, 1, &changedIndex );
-				color.readFrame( &colorFrame );//grab color frame
-			}
-		
+		int changedIndex;
+		users=&userTrackerFrame.getUsers();
+		userCount = users->getSize();
+		userSnap = new nite::UserData[users->getSize()];
+		for(int i=0;i<userCount;i++){
+			userSnap[i]=(*users)[i]; //copy over skeleton data to snapshot variable
+		}
+		if( device.isValid() ){
+			OpenNI::waitForAnyStream( &stream, 1, &changedIndex );
+			color.readFrame( &colorFrame );//grab color frame
+		}
+
 	}
 
 	void* analyzeShirt(int index,int segX=10,int segY=12){
-		
+
 
 		if ( colorFrame.isValid() && userCount>index){
 			colorcv.data = (uchar*) colorFrame.getData();
@@ -180,23 +180,23 @@ public:
 				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPositionConfidence()>0.5
 				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_HIP).getPositionConfidence()>0.5
 				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPositionConfidence()>0.5){
-				
-				userTracker.convertJointCoordinatesToDepth(userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().x,userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().y,userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().z,&xtl,&ytl);
-				xtl*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
-				ytl*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
-				userTracker.convertJointCoordinatesToDepth(userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().x,userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().y,userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().z,&xbr,&ybr);
-				xbr*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
-				ybr*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
-				int x,y;
-				if(ybr<ytl)
-					return NULL;
-				char* shirt = new char[3*segX*segY];
 
-				int moveX = (xbr - xtl)/segX;
-				int moveY = (ybr - ytl)/segY;
-				for(y = ytl;y<ybr-moveY;y+=ybr){
+					userTracker.convertJointCoordinatesToDepth(userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().x,userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().y,userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().z,&xtl,&ytl);
+					xtl*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
+					ytl*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
+					userTracker.convertJointCoordinatesToDepth(userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().x,userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().y,userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().z,&xbr,&ybr);
+					xbr*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
+					ybr*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
+					int x,y;
+					if(ybr<ytl)
+						return NULL;
+					char* shirt = new char[3*segX*segY];
 
-				}
+					int moveX = (xbr - xtl)/segX;
+					int moveY = (ybr - ytl)/segY;
+					for(y = ytl;y<ybr-moveY;y+=ybr){
+
+					}
 
 			}
 		}else{
@@ -208,20 +208,20 @@ public:
 	}
 	int getShirt(int index){
 		if ( colorFrame.isValid() && userCount>index){
-			colorcv.data = (uchar*) colorFrame.getData();
-			cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
+			//colorcv.data = (uchar*) colorFrame.getData();
+			//cv::cvtColor( colorcv, colorcv, CV_BGR2RGB );
 			if(userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPositionConfidence()>0.5
 				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPositionConfidence()>0.5
 				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_HIP).getPositionConfidence()>0.5
 				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPositionConfidence()>0.5){
-				
-				userTracker.convertJointCoordinatesToDepth(userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().x,userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().y,userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().z,&xtl,&ytl);
-				xtl*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
-				ytl*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
-				userTracker.convertJointCoordinatesToDepth(userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().x,userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().y,userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPosition().z,&xbr,&ybr);
-				xbr*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
-				ybr*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
-				return 0;
+
+					userTracker.convertJointCoordinatesToDepth(userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPosition().x,userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPosition().y,userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPosition().z,&xtl,&ytl);
+					xtl*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
+					ytl*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
+					userTracker.convertJointCoordinatesToDepth(userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_HIP).getPosition().x,userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_HIP).getPosition().y,userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_HIP).getPosition().z,&xbr,&ybr);
+					xbr*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
+					ybr*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
+					return 0;
 			}
 		}
 		return -1;
@@ -235,15 +235,23 @@ public:
 		return (ybr - ytl);
 	}
 	int getColor(int x,int y){
-		if((int)xtl+x<640 && (int)xtl+x>0 && (int)ytl+y<480 && (int)ytl+y>0){
+		if(xbr>xtl && (int)xtl+x<640 && (int)xtl+x>0 && (int)ytl+y<480 && (int)ytl+y>0){
 			//std::cout<<(int)xtl+x<<" "<<(int)ytl+y<<std::endl;
-			return colorcv.at<int>((int)ytl+y,(int)xtl+x);
-			
+			Vec3b p = colorcv.at<Vec3b>((int)ytl+y,(int)xtl+x);
+			int pixel=0;
+			pixel  = p[2] << 16; // r
+			pixel |= p[1] << 8;  // g
+			pixel |= p[0];       // b
+			return pixel;
 		}else if(xtl>xbr && (int)xtl-x<640 && (int)xtl-x>0 && (int)ytl+y<480 && (int)ytl+y>0){
 			//std::cout<<(int)xtl+x<<" "<<(int)ytl+y<<std::endl;
-			return colorcv.at<int>((int)ytl+y,(int)xtl-x);
-			
-		}{
+			Vec3b p = colorcv.at<Vec3b>((int)ytl+y,(int)xtl-x);
+			int pixel=0;
+			pixel  = p[2] << 16; // r
+			pixel |= p[1] << 8;  // g
+			pixel |= p[0];       // b
+			return pixel;
+		}else{
 			return -1;
 		}
 	}
@@ -306,6 +314,7 @@ public:
 
 					cv::Rect face(x-50,y-50,100,100);
 					ROI=colorcv(face);
+					ROIflip=colorcv(face);
 					haar_cascade.detectMultiScale(ROI, faces); //look for faces in the ROI
 
 					haar_cascade_side.detectMultiScale(ROI, faces_side1);//look for profiles
@@ -323,7 +332,7 @@ public:
 							}
 						}
 					}
-					
+
 					//std::cerr<<"MATCH WAS "<<match<<"\n";
 					//std::cerr<<"chose face "<<i<<"\n";
 					if(match && peopleIDs[j]<0){//if there is a valid face and they haven't already been identified then put face up for recognition
@@ -341,64 +350,67 @@ public:
 						cv::equalizeHist(faces_resized[j],faces_resized[j]);//make colors more defined (just a filter)
 						peopleIDs[j]=-1;//try to identify
 						//std::cerr<<"face put up for identification\n";
-					}
+					}else{
+						
+						for(i=0;i<faces_side1.size();i++){ //look through the found faces (if any) for one that surrounds the head point
+							//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
 
-					for(i=0;i<faces_side1.size();i++){ //look through the found faces (if any) for one that surrounds the head point
-						//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
-
-						//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
-						if(50>faces_side1[i].x && 50<faces_side1[i].x+faces_side1[i].width){
-							if(50>faces_side1[i].y && 50<faces_side1[i].y+faces_side1[i].height){
-								match = true;//face is found for skeleton j
-								break;
+							//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
+							if(50>faces_side1[i].x && 50<faces_side1[i].x+faces_side1[i].width){
+								if(50>faces_side1[i].y && 50<faces_side1[i].y+faces_side1[i].height){
+									match = true;//face is found for skeleton j
+									break;
+								}
 							}
 						}
-					}
-					//
-					if(match && peopleIDs[j]<0){//if there is a valid face and they haven't already been identified then put face up for recognition
-						//std::cerr<<"resizing\n";
-						Mat temp = ROI(faces_side1[i]);
-						cv::cvtColor(temp, temp, CV_BGR2GRAY);
-						face.x=25;
-						face.y=50;
-						face.height=180;
-						face.width=180;  //resize face to standard size
-						cv::resize(temp, faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
-						faces_resized[j] = faces_resized[j](face); //crop face to get rid of more background
-						//resize to standard size
-						cv::resize(faces_resized[j], faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
-						cv::equalizeHist(faces_resized[j],faces_resized[j]);//make colors more defined (just a filter)
-						peopleIDs[j]=-1;//try to identify
-						//std::cerr<<"face put up for identification\n";
-					}
+						//
+						if(match && peopleIDs[j]<0){//if there is a valid face and they haven't already been identified then put face up for recognition
+							//std::cerr<<"resizing\n";
+							Mat temp = ROI(faces_side1[i]);
+							cv::cvtColor(temp, temp, CV_BGR2GRAY);
+							face.x=25;
+							face.y=50;
+							face.height=180;
+							face.width=180;  //resize face to standard size
+							cv::resize(temp, faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+							faces_resized[j] = faces_resized[j](face); //crop face to get rid of more background
+							//resize to standard size
+							cv::resize(faces_resized[j], faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+							cv::equalizeHist(faces_resized[j],faces_resized[j]);//make colors more defined (just a filter)
+							peopleIDs[j]=-1;//try to identify
+							//std::cerr<<"face put up for identification\n";
+						}else{
+							
+							for(i=0;i<faces_side2.size();i++){ //look through the found faces (if any) for one that surrounds the head point
+								//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
 
-					for(i=0;i<faces_side2.size();i++){ //look through the found faces (if any) for one that surrounds the head point
-						//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
-
-						//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
-						if(50>faces_side2[i].x && 50<faces_side2[i].x+faces_side2[i].width){
-							if(50>faces_side2[i].y && 50<faces_side2[i].y+faces_side2[i].height){
-								match = true;//face is found for skeleton j
-								break;
+								//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
+								if(50>faces_side2[i].x && 50<faces_side2[i].x+faces_side2[i].width){
+									if(50>faces_side2[i].y && 50<faces_side2[i].y+faces_side2[i].height){
+										match = true;//face is found for skeleton j
+										break;
+									}
+								}
+							}
+							//
+							if(match && peopleIDs[j]<0){//if there is a valid face and they haven't already been identified then put face up for recognition
+								//std::cerr<<"resizing\n";
+								Mat temp = ROIflip(faces_side2[i]);
+								cv::cvtColor(temp, temp, CV_BGR2GRAY);
+								face.x=25;
+								face.y=50;
+								face.height=180;
+								face.width=180;  //resize face to standard size
+								cv::resize(temp, faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+								faces_resized[j] = faces_resized[j](face); //crop face to get rid of more background
+								//resize to standard size
+								cv::resize(faces_resized[j], faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+								cv::equalizeHist(faces_resized[j],faces_resized[j]);//make colors more defined (just a filter)
+								peopleIDs[j]=-1;//try to identify
+								//std::cerr<<"face put up for identification\n";
 							}
 						}
-					}
-					//
-					if(match && peopleIDs[j]<0){//if there is a valid face and they haven't already been identified then put face up for recognition
-						//std::cerr<<"resizing\n";
-						Mat temp = ROIflip(faces_side2[i]);
-						cv::cvtColor(temp, temp, CV_BGR2GRAY);
-						face.x=25;
-						face.y=50;
-						face.height=180;
-						face.width=180;  //resize face to standard size
-						cv::resize(temp, faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
-						faces_resized[j] = faces_resized[j](face); //crop face to get rid of more background
-						//resize to standard size
-						cv::resize(faces_resized[j], faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
-						cv::equalizeHist(faces_resized[j],faces_resized[j]);//make colors more defined (just a filter)
-						peopleIDs[j]=-1;//try to identify
-						//std::cerr<<"face put up for identification\n";
+						
 					}
 				}
 			}
@@ -422,7 +434,7 @@ public:
 				img++;//remove / change
 				std::cerr<<"wrote image "<<img<<"\n";
 			}
-			
+
 			//system("pause");
 			int predictedLabel = -1;
 			double confidence = 0.0;
@@ -508,9 +520,9 @@ public:
 	int getUserID(int i){
 		return (*users)[i].getId();
 	}
-		float getUserSkeletonHeadConf(int i){
-			return (*users)[i].getSkeleton().getJoint(nite::JOINT_HEAD).getPositionConfidence();
-		}
+	float getUserSkeletonHeadConf(int i){
+		return (*users)[i].getSkeleton().getJoint(nite::JOINT_HEAD).getPositionConfidence();
+	}
 	float getUserSkeletonHeadX(int i){
 		return (*users)[i].getSkeleton().getJoint(nite::JOINT_HEAD).getPosition().x;
 	}
