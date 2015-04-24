@@ -213,7 +213,16 @@ public:
 			if(userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPositionConfidence()>0.5
 				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPositionConfidence()>0.5
 				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_HIP).getPositionConfidence()>0.5
-				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPositionConfidence()>0.5){
+				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HIP).getPositionConfidence()>0.5
+				&& ~(userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HAND).getPosition().x>userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPosition().x
+				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HAND).getPosition().x<userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().x)
+				&& ~(userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_HAND).getPosition().x>userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPosition().x
+				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_HAND).getPosition().x<userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().x)
+				&& ~(userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HAND).getPosition().x<userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPosition().x
+				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_HAND).getPosition().x>userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().x)
+				&& ~(userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_HAND).getPosition().x<userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPosition().x
+				&& userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_HAND).getPosition().x>userSnap[index].getSkeleton().getJoint(nite::JOINT_LEFT_SHOULDER).getPosition().x)
+				){
 
 					userTracker.convertJointCoordinatesToDepth(userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPosition().x,userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPosition().y,userSnap[index].getSkeleton().getJoint(nite::JOINT_RIGHT_SHOULDER).getPosition().z,&xtl,&ytl);
 					xtl*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
@@ -310,23 +319,23 @@ public:
 				x*=640/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX();
 				y*=480/userTrackerFrame.getDepthFrame().getVideoMode().getResolutionY();
 				//std::cerr<<"x="<<x<<" y="<<y<<"\n";
-				if(x>50 && y>50 && x<590 && y<430){//check to ensure that the 2D coordinates are within a reasonable range
+				if(x>70 && y>70 && x<570 && y<410){//check to ensure that the 2D coordinates are within a reasonable range
 
-					cv::Rect face(x-50,y-50,100,100);
+					cv::Rect face(x-70,y-70,140,140);
 					ROI=colorcv(face);
-					ROIflip=colorcv(face);
+					
 					haar_cascade.detectMultiScale(ROI, faces); //look for faces in the ROI
 
 					haar_cascade_side.detectMultiScale(ROI, faces_side1);//look for profiles
 					flip(ROI,ROIflip,1);
 					haar_cascade_side.detectMultiScale(ROIflip, faces_side2);//look for flipped profiles
-
+					
 					for(i=0;i<faces.size();i++){ //look through the found faces (if any) for one that surrounds the head point
 						//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
 
 						//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
-						if(50>faces[i].x && 50<faces[i].x+faces[i].width){
-							if(50>faces[i].y && 50<faces[i].y+faces[i].height){
+						if(70>faces[i].x && 70<faces[i].x+faces[i].width){
+							if(70>faces[i].y && 70<faces[i].y+faces[i].height){
 								match = true;//face is found for skeleton j
 								break;
 							}
@@ -338,7 +347,7 @@ public:
 					if(match && peopleIDs[j]<0){//if there is a valid face and they haven't already been identified then put face up for recognition
 						//std::cerr<<"resizing\n";
 						Mat temp = ROI(faces[i]);
-						cv::cvtColor(temp, temp, CV_BGR2GRAY);
+						cv::cvtColor(temp, temp, CV_RGB2GRAY);
 						face.x=25;
 						face.y=50;
 						face.height=180;
@@ -351,13 +360,10 @@ public:
 						peopleIDs[j]=-1;//try to identify
 						//std::cerr<<"face put up for identification\n";
 					}else{
-						
+						match = false;
 						for(i=0;i<faces_side1.size();i++){ //look through the found faces (if any) for one that surrounds the head point
-							//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
-
-							//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
-							if(50>faces_side1[i].x && 50<faces_side1[i].x+faces_side1[i].width){
-								if(50>faces_side1[i].y && 50<faces_side1[i].y+faces_side1[i].height){
+							if(70>faces_side1[i].x && 70<faces_side1[i].x+faces_side1[i].width*1.5){
+								if(70>faces_side1[i].y && 70<faces_side1[i].y+faces_side1[i].height*1.5){
 									match = true;//face is found for skeleton j
 									break;
 								}
@@ -367,26 +373,23 @@ public:
 						if(match && peopleIDs[j]<0){//if there is a valid face and they haven't already been identified then put face up for recognition
 							//std::cerr<<"resizing\n";
 							Mat temp = ROI(faces_side1[i]);
-							cv::cvtColor(temp, temp, CV_BGR2GRAY);
+							cv::cvtColor(temp, temp, CV_RGB2GRAY);
 							face.x=25;
 							face.y=50;
 							face.height=180;
 							face.width=180;  //resize face to standard size
 							cv::resize(temp, faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
-							faces_resized[j] = faces_resized[j](face); //crop face to get rid of more background
+							//faces_resized[j] = faces_resized[j](face); //crop face to get rid of more background
 							//resize to standard size
-							cv::resize(faces_resized[j], faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+							//cv::resize(faces_resized[j], faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
 							cv::equalizeHist(faces_resized[j],faces_resized[j]);//make colors more defined (just a filter)
 							peopleIDs[j]=-1;//try to identify
 							//std::cerr<<"face put up for identification\n";
 						}else{
-							
+							match = false;
 							for(i=0;i<faces_side2.size();i++){ //look through the found faces (if any) for one that surrounds the head point
-								//std::cerr<<faces[i].x<<" "<<faces[i].y<<" "<<faces[i].width<<" "<<faces[i].height<<std::endl;
-
-								//std::cerr<<"head at:"<<x<<" "<<y<<std::endl;
-								if(50>faces_side2[i].x && 50<faces_side2[i].x+faces_side2[i].width){
-									if(50>faces_side2[i].y && 50<faces_side2[i].y+faces_side2[i].height){
+								if(70>faces_side2[i].x && 70<faces_side2[i].x+faces_side2[i].width*1.5){
+									if(70>faces_side2[i].y && 70<faces_side2[i].y+faces_side2[i].height*1.5){
 										match = true;//face is found for skeleton j
 										break;
 									}
@@ -396,21 +399,20 @@ public:
 							if(match && peopleIDs[j]<0){//if there is a valid face and they haven't already been identified then put face up for recognition
 								//std::cerr<<"resizing\n";
 								Mat temp = ROIflip(faces_side2[i]);
-								cv::cvtColor(temp, temp, CV_BGR2GRAY);
+								cv::cvtColor(temp, temp, CV_RGB2GRAY);
 								face.x=25;
 								face.y=50;
 								face.height=180;
 								face.width=180;  //resize face to standard size
 								cv::resize(temp, faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
-								faces_resized[j] = faces_resized[j](face); //crop face to get rid of more background
+								//faces_resized[j] = faces_resized[j](face); //crop face to get rid of more background
 								//resize to standard size
-								cv::resize(faces_resized[j], faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
+								//cv::resize(faces_resized[j], faces_resized[j], Size(240, 240), 1.0, 1.0, INTER_CUBIC);//works because IDs and faces resized line up with userSnap
 								cv::equalizeHist(faces_resized[j],faces_resized[j]);//make colors more defined (just a filter)
 								peopleIDs[j]=-1;//try to identify
 								//std::cerr<<"face put up for identification\n";
 							}
 						}
-						
 					}
 				}
 			}
